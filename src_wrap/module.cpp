@@ -20,7 +20,8 @@ void * ConvertibleRosMessage(PyObject * obj_ptr, const std::string& name) {
     return obj_ptr;
 }
 
-struct CppTimeFromPyTime {
+// TODO duration is pretty much same as time
+struct RosTime {
 
   static void * convertible(PyObject * obj_ptr) {
     namespace py = boost::python;
@@ -47,13 +48,29 @@ struct CppTimeFromPyTime {
   static void RegisterConverter() {
     namespace py = boost::python;
     py::converter::registry::push_back(
-        &CppTimeFromPyTime::convertible,
-        &CppTimeFromPyTime::construct,
+        &RosTime::convertible,
+        &RosTime::construct,
         py::type_id< ros::Time >());
   }
+
+  // to-python converter
+  static PyObject * convert(ros::Time const& ts) {
+    namespace py = boost::python;
+    //return py::incref(py::object( s.data().ptr() ));
+    py::object rospy = py::import("rospy");
+    int info = py::extract<int>(rospy.attr("INFO"));
+    py::object TimeType = rospy.attr("Time");
+    py::object pyts = TimeType();
+    uint32_t s = py::extract<uint32_t>(pyts.attr("secs"));
+    uint32_t ns = py::extract<uint32_t>(pyts.attr("nsecs"));
+    pyts.attr("secs") = ts.sec;
+    pyts.attr("nsecs") = ts.nsec;
+    return py::incref(pyts.ptr());
+  }
+
 };
 
-struct CppHeaderFromPyHeader {
+struct StdMsgsHeader {
 
   static void * convertible(PyObject * obj_ptr) {
     return ConvertibleRosMessage(obj_ptr, "std_msgs/Header");
@@ -77,14 +94,14 @@ struct CppHeaderFromPyHeader {
   static void RegisterConverter() {
     namespace py = boost::python;
     py::converter::registry::push_back(
-        &CppHeaderFromPyHeader::convertible,
-        &CppHeaderFromPyHeader::construct,
+        &StdMsgsHeader::convertible,
+        &StdMsgsHeader::construct,
         py::type_id< std_msgs::Header >());
   }
 
 };
 
-struct CppPointFieldFromPyPointField {
+struct SensorMsgsPointField {
 
   static void * convertible(PyObject * obj_ptr) {
     return ConvertibleRosMessage(obj_ptr, "sensor_msgs/PointField");
@@ -109,13 +126,13 @@ struct CppPointFieldFromPyPointField {
   static void RegisterConverter() {
     namespace py = boost::python;
     py::converter::registry::push_back(
-        &CppPointFieldFromPyPointField::convertible,
-        &CppPointFieldFromPyPointField::construct,
+        &SensorMsgsPointField::convertible,
+        &SensorMsgsPointField::construct,
         py::type_id< sensor_msgs::PointField >());
   }
 };
 
-struct CppPointCloud2FromPyPointCloud2 {
+struct SensorMsgsPointCloud2 {
 
   static void * convertible(PyObject * obj_ptr) {
     return ConvertibleRosMessage(obj_ptr, "sensor_msgs/PointCloud2");
@@ -153,15 +170,16 @@ struct CppPointCloud2FromPyPointCloud2 {
   static void RegisterConverter() {
     namespace py = boost::python;
     //py::to_python_converter<sensor_msgs::PointCloud2,
-    //CppPointCloud2FromPyPointCloud2>();
+    //SensorMsgsPointCloud2>();
     //std::cerr << "registering cpp pc from python pc converter" << std::endl;
     py::converter::registry::push_back(
-        &CppPointCloud2FromPyPointCloud2::convertible,
-        &CppPointCloud2FromPyPointCloud2::construct,
+        &SensorMsgsPointCloud2::convertible,
+        &SensorMsgsPointCloud2::construct,
         py::type_id< sensor_msgs::PointCloud2 >());
   }
 
 };
+
 
 // just a sanity check
 void print_centroid(const sensor_msgs::PointCloud2& cloud) {
@@ -177,11 +195,20 @@ void print_centroid(const sensor_msgs::PointCloud2& cloud) {
   std::cout << "centroid = [" << cx << " " << cy << " " << cz << "]" << std::endl;
 }
 
+ros::Time increment_ts( const ros::Time& ts ) {
+  std::cerr << "ts.sec = " << ts.sec << ", ts.nsec = " << ts.nsec << std::endl;
+  ros::Time newts(ts.sec + 1, ts.nsec + 1);
+  std::cerr << "newts.sec = " << newts.sec << ", newts.nsec = " << newts.nsec << std::endl;
+  return newts;
+}
+
 BOOST_PYTHON_MODULE(libpymsg) {
-  using namespace boost::python;
-  CppTimeFromPyTime::RegisterConverter();
-  CppHeaderFromPyHeader::RegisterConverter();
-  CppPointFieldFromPyPointField::RegisterConverter();
-  CppPointCloud2FromPyPointCloud2::RegisterConverter();
-  def("print_centroid", &print_centroid);
+  namespace py = boost::python;
+  py::to_python_converter< ros::Time, RosTime >();
+  RosTime::RegisterConverter();
+  StdMsgsHeader::RegisterConverter();
+  SensorMsgsPointField::RegisterConverter();
+  SensorMsgsPointCloud2::RegisterConverter();
+  py::def("print_centroid", &print_centroid);
+  py::def("increment_ts", &increment_ts);
 }
