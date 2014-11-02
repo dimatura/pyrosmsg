@@ -45,27 +45,26 @@ struct RosTime {
     t->nsec = py::extract<uint32_t>(o.attr("nsecs"));
   }
 
-  static void RegisterConverter() {
-    namespace py = boost::python;
-    py::converter::registry::push_back(
-        &RosTime::convertible,
-        &RosTime::construct,
-        py::type_id< ros::Time >());
-  }
-
   // to-python converter
   static PyObject * convert(ros::Time const& ts) {
     namespace py = boost::python;
     //return py::incref(py::object( s.data().ptr() ));
     py::object rospy = py::import("rospy");
-    int info = py::extract<int>(rospy.attr("INFO"));
+    //int info = py::extract<int>(rospy.attr("INFO"));
     py::object TimeType = rospy.attr("Time");
     py::object pyts = TimeType();
-    uint32_t s = py::extract<uint32_t>(pyts.attr("secs"));
-    uint32_t ns = py::extract<uint32_t>(pyts.attr("nsecs"));
     pyts.attr("secs") = ts.sec;
     pyts.attr("nsecs") = ts.nsec;
     return py::incref(pyts.ptr());
+  }
+
+  static void RegisterConverter() {
+    namespace py = boost::python;
+    py::to_python_converter< ros::Time, RosTime >();
+    py::converter::registry::push_back(
+        &RosTime::convertible,
+        &RosTime::construct,
+        py::type_id< ros::Time >());
   }
 
 };
@@ -91,12 +90,67 @@ struct StdMsgsHeader {
     msg->frame_id = py::extract<std::string>(o.attr("frame_id"));
   }
 
+  static PyObject * convert(const std_msgs::Header& header) {
+    namespace py = boost::python;
+    //return py::incref(py::object( s.data().ptr() ));
+    py::object module = py::import("std_msgs.msg._Header");
+    py::object MsgType = module.attr("Header");
+    py::object msg = MsgType();
+    msg.attr("seq") = header.seq;
+    msg.attr("stamp") = header.stamp;
+    msg.attr("frame_id") = header.frame_id;
+    return py::incref(msg.ptr());
+  }
+
   static void RegisterConverter() {
     namespace py = boost::python;
+    py::to_python_converter< std_msgs::Header, StdMsgsHeader >();
     py::converter::registry::push_back(
         &StdMsgsHeader::convertible,
         &StdMsgsHeader::construct,
         py::type_id< std_msgs::Header >());
+  }
+
+};
+
+struct GeometryMsgsPoint {
+  static void * convertible(PyObject * obj_ptr) {
+    return ConvertibleRosMessage(obj_ptr, "geometry_msgs/Point");
+  }
+  static void construct(PyObject * obj_ptr,
+                        boost::python::converter::rvalue_from_python_stage1_data* data) {
+    namespace py = boost::python;
+    typedef py::converter::rvalue_from_python_storage< geometry_msgs::Point > StorageT;
+    void* storage = reinterpret_cast< StorageT* >(data)->storage.bytes;
+    new (storage) geometry_msgs::Point; // placement new
+    data->convertible = storage;
+    geometry_msgs::Point* msg = static_cast< geometry_msgs::Point* >(storage);
+    py::handle<> handle(py::borrowed(obj_ptr));
+    py::object o(handle);
+    msg->x = py::extract<double>(o.attr("x"));
+    msg->y = py::extract<double>(o.attr("y"));
+    msg->z = py::extract<double>(o.attr("z"));
+  }
+
+  static PyObject * convert(const geometry_msgs::Point& pt) {
+    namespace py = boost::python;
+    //return py::incref(py::object( s.data().ptr() ));
+    py::object module = py::import("geometry_msgs.msg._Point");
+    py::object MsgType = module.attr("Point");
+    py::object msg = MsgType();
+    msg.attr("x") = pt.x;
+    msg.attr("y") = pt.y;
+    msg.attr("z") = pt.z;
+    return py::incref(msg.ptr());
+  }
+
+  static void RegisterConverter() {
+    namespace py = boost::python;
+    py::to_python_converter< geometry_msgs::Point, GeometryMsgsPoint >();
+    py::converter::registry::push_back(
+        &StdMsgsHeader::convertible,
+        &StdMsgsHeader::construct,
+        py::type_id< geometry_msgs::Point >());
   }
 
 };
@@ -123,8 +177,22 @@ struct SensorMsgsPointField {
     msg->count = py::extract< uint32_t >(o.attr("count"));
   }
 
+  static PyObject * convert(sensor_msgs::PointField const & pf) {
+    namespace py = boost::python;
+    //return py::incref(py::object( s.data().ptr() ));
+    py::object module = py::import("sensor_msgs.msg._PointField");
+    py::object MsgType = module.attr("PointField");
+    py::object msg = MsgType();
+    msg.attr("name") = pf.name;
+    msg.attr("offset") = pf.offset;
+    msg.attr("datatype") = pf.datatype;
+    msg.attr("count") = pf.count;
+    return py::incref(msg.ptr());
+  }
+
   static void RegisterConverter() {
     namespace py = boost::python;
+    py::to_python_converter< sensor_msgs::PointField, SensorMsgsPointField >();
     py::converter::registry::push_back(
         &SensorMsgsPointField::convertible,
         &SensorMsgsPointField::construct,
@@ -167,11 +235,45 @@ struct SensorMsgsPointCloud2 {
     pc->is_dense = py::extract<uint32_t>(o.attr("is_dense"));
   }
 
+  static PyObject * convert(const sensor_msgs::PointCloud2& pc) {
+    namespace py = boost::python;
+    //return py::incref(py::object( s.data().ptr() ));
+    py::object module = py::import("sensor_msgs.msg._PointCloud2");
+    py::object MsgType = module.attr("PointCloud2");
+    py::object msg = MsgType();
+    msg.attr("header") = pc.header;
+    msg.attr("height") = pc.height;
+    msg.attr("width") = pc.width;
+    py::list field_lst = py::extract<py::list>(msg.attr("fields"));
+    std::cerr << "py::len(field_lst) = " << py::len(field_lst) << std::endl;
+    std::cerr << "pc.fields.size() = " << pc.fields.size() << std::endl;
+    field_lst.append(pc.fields[0]);
+    std::cerr << "py::len(field_lst) = " << py::len(field_lst) << std::endl;
+#if 0
+    for ( size_t i=0; pc.fields.size(); ++i ) {
+      sensor_msgs::PointField pf(pc.fields[i]);
+      std::cerr << "pf.name = " << pf.name << std::endl;
+      //py::object opf(pf);
+      field_lst.append(pf);
+      std::cerr << "bla1" << std::endl; }
+#endif
+    std::cerr << "bla2" << std::endl;
+    msg.attr("is_bigendian") = pc.is_bigendian;
+    msg.attr("point_step") = pc.point_step;
+    msg.attr("row_step") = pc.row_step;
+    std::string data_str(pc.data.begin(), pc.data.end());
+    msg.attr("data") = data_str;
+    msg.attr("is_dense") = pc.is_dense;
+    std::cerr << "bla" << std::endl;
+    return py::incref(msg.ptr());
+  }
+
   static void RegisterConverter() {
     namespace py = boost::python;
     //py::to_python_converter<sensor_msgs::PointCloud2,
     //SensorMsgsPointCloud2>();
     //std::cerr << "registering cpp pc from python pc converter" << std::endl;
+    py::to_python_converter< sensor_msgs::PointCloud2, SensorMsgsPointCloud2 >();
     py::converter::registry::push_back(
         &SensorMsgsPointCloud2::convertible,
         &SensorMsgsPointCloud2::construct,
@@ -202,13 +304,38 @@ ros::Time increment_ts( const ros::Time& ts ) {
   return newts;
 }
 
+std_msgs::Header make_header( int seq ) {
+  std_msgs::Header out;
+  out.seq = seq;
+  return out;
+}
+
+sensor_msgs::PointCloud2 make_pc2( int rows ) {
+  sensor_msgs::PointCloud2 pc;
+  pc.width = rows;
+  pc.height = 1;
+  sensor_msgs::PointField pfx;
+  pfx.name =  "x";
+  pfx.offset = 0;
+  pfx.datatype = sensor_msgs::PointField::FLOAT32;
+  pfx.count = 1;
+  pc.fields.push_back(pfx);
+  pc.point_step = sizeof(float);
+  float data[rows];
+  for (int i=0; i < rows; ++i) { data[i] = 28.0; }
+  pc.data.insert(pc.data.end(), reinterpret_cast<uint8_t *>(data), reinterpret_cast<uint8_t *>(data+rows));
+  return pc;
+}
+
 BOOST_PYTHON_MODULE(libpymsg) {
   namespace py = boost::python;
-  py::to_python_converter< ros::Time, RosTime >();
+
   RosTime::RegisterConverter();
   StdMsgsHeader::RegisterConverter();
   SensorMsgsPointField::RegisterConverter();
   SensorMsgsPointCloud2::RegisterConverter();
   py::def("print_centroid", &print_centroid);
+  py::def("make_header", &make_header);
+  py::def("make_pc2", &make_pc2);
   py::def("increment_ts", &increment_ts);
 }
