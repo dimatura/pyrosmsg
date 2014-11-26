@@ -8,6 +8,8 @@
 
 #include <std_msgs/Header.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <geometry_msgs/Quaternion.h>
+#include <geometry_msgs/Point.h>
 
 static inline
 void * ConvertibleRosMessage(PyObject * obj_ptr, const std::string& name) {
@@ -114,9 +116,11 @@ struct StdMsgsHeader {
 };
 
 struct GeometryMsgsPoint {
+
   static void * convertible(PyObject * obj_ptr) {
     return ConvertibleRosMessage(obj_ptr, "geometry_msgs/Point");
   }
+
   static void construct(PyObject * obj_ptr,
                         boost::python::converter::rvalue_from_python_stage1_data* data) {
     namespace py = boost::python;
@@ -148,9 +152,55 @@ struct GeometryMsgsPoint {
     namespace py = boost::python;
     py::to_python_converter< geometry_msgs::Point, GeometryMsgsPoint >();
     py::converter::registry::push_back(
-        &StdMsgsHeader::convertible,
-        &StdMsgsHeader::construct,
+        &GeometryMsgsPoint::convertible,
+        &GeometryMsgsPoint::construct,
         py::type_id< geometry_msgs::Point >());
+  }
+
+};
+
+struct GeometryMsgsQuaternion {
+
+  static void * convertible(PyObject * obj_ptr) {
+    return ConvertibleRosMessage(obj_ptr, "geometry_msgs/Quaternion");
+  }
+
+  static void construct(PyObject * obj_ptr,
+                        boost::python::converter::rvalue_from_python_stage1_data* data) {
+    namespace py = boost::python;
+    typedef py::converter::rvalue_from_python_storage< geometry_msgs::Quaternion > StorageT;
+    void* storage = reinterpret_cast< StorageT* >(data)->storage.bytes;
+    new (storage) geometry_msgs::Quaternion; // placement new
+    data->convertible = storage;
+    geometry_msgs::Quaternion* msg = static_cast< geometry_msgs::Quaternion* >(storage);
+    py::handle<> handle(py::borrowed(obj_ptr));
+    py::object o(handle);
+    msg->x = py::extract<double>(o.attr("x"));
+    msg->y = py::extract<double>(o.attr("y"));
+    msg->z = py::extract<double>(o.attr("z"));
+    msg->w = py::extract<double>(o.attr("w"));
+  }
+
+  static PyObject * convert(const geometry_msgs::Quaternion& q) {
+    namespace py = boost::python;
+    //return py::incref(py::object( s.data().ptr() ));
+    py::object module = py::import("geometry_msgs.msg._Quaternion");
+    py::object MsgType = module.attr("Quaternion");
+    py::object msg = MsgType();
+    msg.attr("x") = q.x;
+    msg.attr("y") = q.y;
+    msg.attr("z") = q.z;
+    msg.attr("z") = q.w;
+    return py::incref(msg.ptr());
+  }
+
+  static void RegisterConverter() {
+    namespace py = boost::python;
+    py::to_python_converter< geometry_msgs::Quaternion, GeometryMsgsQuaternion >();
+    py::converter::registry::push_back(
+        &GeometryMsgsQuaternion::convertible,
+        &GeometryMsgsQuaternion::construct,
+        py::type_id< geometry_msgs::Quaternion >());
   }
 
 };
