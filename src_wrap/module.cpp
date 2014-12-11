@@ -272,6 +272,7 @@ struct SensorMsgsPointCloud2 {
     pc->height = py::extract<uint32_t>(o.attr("height"));
     pc->width = py::extract<uint32_t>(o.attr("width"));
     py::list field_lst = py::extract<py::list>(o.attr("fields"));
+    //std::cerr << "py::len(field_lst) = " << py::len(field_lst) << std::endl;
     for (size_t i=0; i < py::len(field_lst); ++i) {
       sensor_msgs::PointField pf(py::extract< sensor_msgs::PointField >(field_lst[i]));
       pc->fields.push_back(pf);
@@ -294,27 +295,27 @@ struct SensorMsgsPointCloud2 {
     msg.attr("header") = pc.header;
     msg.attr("height") = pc.height;
     msg.attr("width") = pc.width;
+    // create empty python list
     py::list field_lst = py::extract<py::list>(msg.attr("fields"));
-    std::cerr << "py::len(field_lst) = " << py::len(field_lst) << std::endl;
-    std::cerr << "pc.fields.size() = " << pc.fields.size() << std::endl;
-    field_lst.append(pc.fields[0]);
-    std::cerr << "py::len(field_lst) = " << py::len(field_lst) << std::endl;
-#if 0
-    for ( size_t i=0; pc.fields.size(); ++i ) {
-      sensor_msgs::PointField pf(pc.fields[i]);
-      std::cerr << "pf.name = " << pf.name << std::endl;
+    //field_lst.append(pc.fields[0]);
+    //std::cerr << "py::len(field_lst) = " << py::len(field_lst) << std::endl;
+    //std::cerr << "pc.fields.size() = " << pc.fields.size() << std::endl;
+    for ( size_t i=0; i<pc.fields.size(); ++i ) {
+      const sensor_msgs::PointField& pf(pc.fields[i]);
+      //std::cerr << "pf.name = " << pf.name << std::endl;
       //py::object opf(pf);
       field_lst.append(pf);
-      std::cerr << "bla1" << std::endl; }
-#endif
-    std::cerr << "bla2" << std::endl;
+      //std::cerr << "bla1" << std::endl;
+    }
+    //std::cerr << "py::len(field_lst) = " << py::len(field_lst) << std::endl;
+    //std::cerr << "bla2" << std::endl;
     msg.attr("is_bigendian") = pc.is_bigendian;
     msg.attr("point_step") = pc.point_step;
     msg.attr("row_step") = pc.row_step;
     std::string data_str(pc.data.begin(), pc.data.end());
     msg.attr("data") = data_str;
     msg.attr("is_dense") = pc.is_dense;
-    std::cerr << "bla" << std::endl;
+    //std::cerr << "bla" << std::endl;
     return py::incref(msg.ptr());
   }
 
