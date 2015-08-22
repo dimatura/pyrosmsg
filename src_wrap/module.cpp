@@ -8,7 +8,6 @@
  *
  **@=*/
 
-
 #include <boost/python.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
@@ -19,6 +18,7 @@
 
 #include <std_msgs/Header.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/CameraInfo.h>
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Point.h>
 
@@ -284,7 +284,7 @@ struct SensorMsgsPointCloud2 {
     pc->width = py::extract<uint32_t>(o.attr("width"));
     py::list field_lst = py::extract<py::list>(o.attr("fields"));
     //std::cerr << "py::len(field_lst) = " << py::len(field_lst) << std::endl;
-    for (size_t i=0; i < py::len(field_lst); ++i) {
+    for (int i=0; i < py::len(field_lst); ++i) {
       sensor_msgs::PointField pf(py::extract< sensor_msgs::PointField >(field_lst[i]));
       pc->fields.push_back(pf);
     }
@@ -344,6 +344,90 @@ struct SensorMsgsPointCloud2 {
 
 };
 
+struct SensorMsgsCameraInfo {
+
+  static void * convertible(PyObject * obj_ptr) {
+    return ConvertibleRosMessage(obj_ptr, "sensor_msgs/CameraInfo");
+  }
+
+  static void construct(PyObject * obj_ptr,
+                        boost::python::converter::rvalue_from_python_stage1_data* data) {
+    namespace py = boost::python;
+    typedef py::converter::rvalue_from_python_storage< sensor_msgs::CameraInfo > StorageT;
+    void* storage = reinterpret_cast< StorageT* >(data)->storage.bytes;
+    new (storage) sensor_msgs::CameraInfo;
+    data->convertible = storage;
+    sensor_msgs::CameraInfo* msg = static_cast< sensor_msgs::CameraInfo* >(storage);
+    py::handle<> handle(py::borrowed(obj_ptr));
+    py::object o(handle);
+
+    msg->height = py::extract< uint32_t >(o.attr("height"));
+    msg->width = py::extract< uint32_t >(o.attr("width"));
+    msg->distortion_model = py::extract< std::string >(o.attr("distortion_model"));
+    py::list D_lst = py::extract<py::list>(o.attr("D"));
+    for (int i=0; i < py::len(D_lst); ++i) {
+      double di(py::extract<double>(D_lst[i]));
+      msg->D.push_back(di);
+    }
+    py::list K_lst = py::extract<py::list>(o.attr("K"));
+    for (int i=0; i < py::len(K_lst); ++i) {
+      double ki(py::extract<double>(K_lst[i]));
+      msg->K[i] = ki;
+    }
+    py::list R_lst = py::extract<py::list>(o.attr("R"));
+    for (int i=0; i < py::len(K_lst); ++i) {
+      double Ri(py::extract<double>(K_lst[i]));
+      msg->R[i] = Ri;
+    }
+    py::list P_lst = py::extract<py::list>(o.attr("P"));
+    for (int i=0; i < py::len(P_lst); ++i) {
+      double Pi(py::extract<double>(P_lst[i]));
+      msg->P[i] = Pi;
+    }
+    msg->header = py::extract<std_msgs::Header>(o.attr("header"));
+    // TODO roi, binning
+  }
+
+  static PyObject * convert(const sensor_msgs::CameraInfo & ci) {
+    namespace py = boost::python;
+    //return py::incref(py::object( s.data().ptr() ));
+    py::object module = py::import("sensor_msgs.msg._CameraInfo");
+    py::object MsgType = module.attr("CameraInfo");
+    py::object msg = MsgType();
+    msg.attr("header") = ci.header;
+    msg.attr("height") = ci.height;
+    msg.attr("width") = ci.width;
+    msg.attr("distortion_model") = ci.distortion_model;
+    py::list D_lst = py::extract<py::list>(msg.attr("D"));
+    for ( size_t i=0; i<ci.D.size(); ++i ) {
+      D_lst.append(ci.D[i]);
+    }
+    py::list K_lst = py::extract<py::list>(msg.attr("K"));
+    for ( size_t i=0; i<9; ++i ) {
+      K_lst.append(ci.K[i]);
+    }
+    py::list R_lst = py::extract<py::list>(msg.attr("R"));
+    for ( size_t i=0; i<9; ++i ) {
+      R_lst.append(ci.R[i]);
+    }
+    py::list P_lst = py::extract<py::list>(msg.attr("P"));
+    for ( size_t i=0; i<12; ++i ) {
+      R_lst.append(ci.P[i]);
+    }
+    // TODO roi,binning
+
+    return py::incref(msg.ptr());
+  }
+
+  static void RegisterConverter() {
+    namespace py = boost::python;
+    py::to_python_converter< sensor_msgs::CameraInfo, SensorMsgsCameraInfo >();
+    py::converter::registry::push_back(
+        &SensorMsgsCameraInfo::convertible,
+        &SensorMsgsCameraInfo::construct,
+        py::type_id< sensor_msgs::CameraInfo >());
+  }
+};
 
 // just a sanity check
 void print_centroid(const sensor_msgs::PointCloud2& cloud) {
@@ -389,6 +473,12 @@ sensor_msgs::PointCloud2 make_pc2( int rows ) {
   return pc;
 }
 
+void print_cam_info(const sensor_msgs::CameraInfo& ci) {
+  std::cout << ci.distortion_model << "\n";
+  std::cout << ci.K[8] << " " << ci.R[8] << " " << ci.P[8] << "\n";
+}
+
+
 BOOST_PYTHON_MODULE(libpymsg) {
   namespace py = boost::python;
 
@@ -396,8 +486,10 @@ BOOST_PYTHON_MODULE(libpymsg) {
   StdMsgsHeader::RegisterConverter();
   SensorMsgsPointField::RegisterConverter();
   SensorMsgsPointCloud2::RegisterConverter();
+  SensorMsgsCameraInfo::RegisterConverter();
   py::def("print_centroid", &print_centroid);
   py::def("make_header", &make_header);
   py::def("make_pc2", &make_pc2);
   py::def("increment_ts", &increment_ts);
+  py::def("print_cam_info", &print_cam_info);
 }
