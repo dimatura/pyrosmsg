@@ -364,22 +364,22 @@ struct SensorMsgsCameraInfo {
     msg->height = py::extract< uint32_t >(o.attr("height"));
     msg->width = py::extract< uint32_t >(o.attr("width"));
     msg->distortion_model = py::extract< std::string >(o.attr("distortion_model"));
-    py::list D_lst = py::extract<py::list>(o.attr("D"));
+    py::tuple D_lst = py::extract<py::tuple>(o.attr("D"));
     for (int i=0; i < py::len(D_lst); ++i) {
       double di(py::extract<double>(D_lst[i]));
       msg->D.push_back(di);
     }
-    py::list K_lst = py::extract<py::list>(o.attr("K"));
+    py::tuple K_lst = py::extract<py::tuple>(o.attr("K"));
     for (int i=0; i < py::len(K_lst); ++i) {
       double ki(py::extract<double>(K_lst[i]));
       msg->K[i] = ki;
     }
-    py::list R_lst = py::extract<py::list>(o.attr("R"));
+    py::tuple R_lst = py::extract<py::tuple>(o.attr("R"));
     for (int i=0; i < py::len(K_lst); ++i) {
       double Ri(py::extract<double>(K_lst[i]));
       msg->R[i] = Ri;
     }
-    py::list P_lst = py::extract<py::list>(o.attr("P"));
+    py::tuple P_lst = py::extract<py::tuple>(o.attr("P"));
     for (int i=0; i < py::len(P_lst); ++i) {
       double Pi(py::extract<double>(P_lst[i]));
       msg->P[i] = Pi;
