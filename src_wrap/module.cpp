@@ -21,6 +21,8 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Transform.h>
 
 static inline
 void * ConvertibleRosMessage(PyObject * obj_ptr, const std::string& name) {
@@ -170,6 +172,51 @@ struct GeometryMsgsPoint {
 
 };
 
+struct GeometryMsgsVector3 {
+
+  static void * convertible(PyObject * obj_ptr) {
+    return ConvertibleRosMessage(obj_ptr, "geometry_msgs/Vector3");
+  }
+
+  static void construct(PyObject * obj_ptr,
+                        boost::python::converter::rvalue_from_python_stage1_data* data) {
+    namespace py = boost::python;
+    typedef py::converter::rvalue_from_python_storage< geometry_msgs::Vector3 > StorageT;
+    void* storage = reinterpret_cast< StorageT* >(data)->storage.bytes;
+    new (storage) geometry_msgs::Vector3; // placement new
+    data->convertible = storage;
+    geometry_msgs::Vector3* msg = static_cast< geometry_msgs::Vector3* >(storage);
+    py::handle<> handle(py::borrowed(obj_ptr));
+    py::object o(handle);
+    msg->x = py::extract<double>(o.attr("x"));
+    msg->y = py::extract<double>(o.attr("y"));
+    msg->z = py::extract<double>(o.attr("z"));
+  }
+
+  static PyObject * convert(const geometry_msgs::Vector3& pt) {
+    namespace py = boost::python;
+    //return py::incref(py::object( s.data().ptr() ));
+    py::object module = py::import("geometry_msgs.msg._Vector3");
+    py::object MsgType = module.attr("Vector3");
+    py::object msg = MsgType();
+    msg.attr("x") = pt.x;
+    msg.attr("y") = pt.y;
+    msg.attr("z") = pt.z;
+    return py::incref(msg.ptr());
+  }
+
+  static void RegisterConverter() {
+    namespace py = boost::python;
+    py::to_python_converter< geometry_msgs::Vector3, GeometryMsgsVector3 >();
+    py::converter::registry::push_back(
+        &GeometryMsgsVector3::convertible,
+        &GeometryMsgsVector3::construct,
+        py::type_id< geometry_msgs::Vector3 >());
+  }
+
+};
+
+
 struct GeometryMsgsQuaternion {
 
   static void * convertible(PyObject * obj_ptr) {
@@ -201,7 +248,7 @@ struct GeometryMsgsQuaternion {
     msg.attr("x") = q.x;
     msg.attr("y") = q.y;
     msg.attr("z") = q.z;
-    msg.attr("z") = q.w;
+    msg.attr("w") = q.w;
     return py::incref(msg.ptr());
   }
 
@@ -215,6 +262,49 @@ struct GeometryMsgsQuaternion {
   }
 
 };
+
+struct GeometryMsgsTransform {
+
+  static void * convertible(PyObject * obj_ptr) {
+    return ConvertibleRosMessage(obj_ptr, "geometry_msgs/Transform");
+  }
+
+  static void construct(PyObject * obj_ptr,
+                        boost::python::converter::rvalue_from_python_stage1_data* data) {
+    namespace py = boost::python;
+    typedef py::converter::rvalue_from_python_storage< geometry_msgs::Transform > StorageT;
+    void* storage = reinterpret_cast< StorageT* >(data)->storage.bytes;
+    new (storage) geometry_msgs::Transform; // placement new
+    data->convertible = storage;
+    geometry_msgs::Transform* msg = static_cast< geometry_msgs::Transform* >(storage);
+    py::handle<> handle(py::borrowed(obj_ptr));
+    py::object o(handle);
+    msg->translation = py::extract<geometry_msgs::Vector3>(o.attr("translation"));
+    msg->rotation = py::extract<geometry_msgs::Quaternion>(o.attr("rotation"));
+  }
+
+  static PyObject * convert(const geometry_msgs::Transform& tfmsg) {
+    namespace py = boost::python;
+    //return py::incref(py::object( s.data().ptr() ));
+    py::object module = py::import("geometry_msgs.msg._Transform");
+    py::object MsgType = module.attr("Transform");
+    py::object msg = MsgType();
+    msg.attr("translation") = tfmsg.translation;
+    msg.attr("rotation") = tfmsg.rotation;
+    return py::incref(msg.ptr());
+  }
+
+  static void RegisterConverter() {
+    namespace py = boost::python;
+    py::to_python_converter< geometry_msgs::Transform, GeometryMsgsTransform >();
+    py::converter::registry::push_back(
+        &GeometryMsgsTransform::convertible,
+        &GeometryMsgsTransform::construct,
+        py::type_id< geometry_msgs::Transform >());
+  }
+
+};
+
 
 struct SensorMsgsPointField {
 
@@ -320,6 +410,7 @@ struct SensorMsgsPointCloud2 {
     }
     //std::cerr << "py::len(field_lst) = " << py::len(field_lst) << std::endl;
     //std::cerr << "bla2" << std::endl;
+    msg.attr("fields") = field_lst;
     msg.attr("is_bigendian") = pc.is_bigendian;
     msg.attr("point_step") = pc.point_step;
     msg.attr("row_step") = pc.row_step;
@@ -487,6 +578,10 @@ BOOST_PYTHON_MODULE(libpymsg) {
   SensorMsgsPointField::RegisterConverter();
   SensorMsgsPointCloud2::RegisterConverter();
   SensorMsgsCameraInfo::RegisterConverter();
+  GeometryMsgsPoint::RegisterConverter();
+  GeometryMsgsVector3::RegisterConverter();
+  GeometryMsgsQuaternion::RegisterConverter();
+  GeometryMsgsTransform::RegisterConverter();
   py::def("print_centroid", &print_centroid);
   py::def("make_header", &make_header);
   py::def("make_pc2", &make_pc2);
