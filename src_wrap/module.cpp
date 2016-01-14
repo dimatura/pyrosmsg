@@ -23,6 +23,7 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Transform.h>
+#include <geometry_msgs/TransformStamped.h>
 
 static inline
 void * ConvertibleRosMessage(PyObject * obj_ptr, const std::string& name) {
@@ -305,6 +306,50 @@ struct GeometryMsgsTransform {
 
 };
 
+struct GeometryMsgsTransformStamped {
+
+  static void * convertible(PyObject * obj_ptr) {
+    return ConvertibleRosMessage(obj_ptr, "geometry_msgs/TransformStamped");
+  }
+
+  static void construct(PyObject * obj_ptr,
+                        boost::python::converter::rvalue_from_python_stage1_data* data) {
+    namespace py = boost::python;
+    typedef py::converter::rvalue_from_python_storage< geometry_msgs::TransformStamped > StorageT;
+    void* storage = reinterpret_cast< StorageT* >(data)->storage.bytes;
+    new (storage) geometry_msgs::TransformStamped; // placement new
+    data->convertible = storage;
+    geometry_msgs::TransformStamped* msg = static_cast< geometry_msgs::TransformStamped* >(storage);
+    py::handle<> handle(py::borrowed(obj_ptr));
+    py::object o(handle);
+    msg->header = py::extract<std_msgs::Header>(o.attr("header"));
+    msg->child_frame_id = py::extract<std::string>(o.attr("child_frame_id"));
+    msg->transform = py::extract<geometry_msgs::Transform>(o.attr("transform"));
+  }
+
+  static PyObject * convert(const geometry_msgs::TransformStamped& tfmsg) {
+    namespace py = boost::python;
+    //return py::incref(py::object( s.data().ptr() ));
+    py::object module = py::import("geometry_msgs.msg._TransformStamped");
+    py::object MsgType = module.attr("TransformStamped");
+    py::object msg = MsgType();
+    msg.attr("header") = tfmsg.header;
+    msg.attr("child_frame_id") = tfmsg.child_frame_id;
+    msg.attr("transform") = tfmsg.transform;
+    return py::incref(msg.ptr());
+  }
+
+  static void RegisterConverter() {
+    namespace py = boost::python;
+    py::to_python_converter< geometry_msgs::TransformStamped, GeometryMsgsTransformStamped >();
+    py::converter::registry::push_back(
+        &GeometryMsgsTransformStamped::convertible,
+        &GeometryMsgsTransformStamped::construct,
+        py::type_id< geometry_msgs::TransformStamped >());
+  }
+
+};
+
 
 struct SensorMsgsPointField {
 
@@ -455,6 +500,7 @@ struct SensorMsgsCameraInfo {
     msg->height = py::extract< uint32_t >(o.attr("height"));
     msg->width = py::extract< uint32_t >(o.attr("width"));
     msg->distortion_model = py::extract< std::string >(o.attr("distortion_model"));
+    // TODO tuple or list?
     py::tuple D_lst = py::extract<py::tuple>(o.attr("D"));
     for (int i=0; i < py::len(D_lst); ++i) {
       double di(py::extract<double>(D_lst[i]));
@@ -582,6 +628,7 @@ BOOST_PYTHON_MODULE(libpymsg) {
   GeometryMsgsVector3::RegisterConverter();
   GeometryMsgsQuaternion::RegisterConverter();
   GeometryMsgsTransform::RegisterConverter();
+  GeometryMsgsTransformStamped::RegisterConverter();
   py::def("print_centroid", &print_centroid);
   py::def("make_header", &make_header);
   py::def("make_pc2", &make_pc2);
