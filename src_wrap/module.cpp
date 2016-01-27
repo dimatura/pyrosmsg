@@ -10,7 +10,6 @@
 
 #include <boost/python.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
 
 #include <ros/ros.h>
 #include <ros/time.h>
