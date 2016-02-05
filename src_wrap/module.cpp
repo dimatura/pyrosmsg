@@ -18,6 +18,7 @@
 #include <std_msgs/Header.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/Image.h>
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Vector3.h>
@@ -478,6 +479,61 @@ struct SensorMsgsPointCloud2 {
   }
 
 };
+
+struct SensorMsgsImage {
+
+  static void * convertible(PyObject * obj_ptr) {
+    return ConvertibleRosMessage(obj_ptr, "sensor_msgs/Image");
+  }
+
+  static void construct(PyObject * obj_ptr,
+                        boost::python::converter::rvalue_from_python_stage1_data* data) {
+    namespace py = boost::python;
+    typedef py::converter::rvalue_from_python_storage< sensor_msgs::Image > StorageT;
+    void* storage = reinterpret_cast< StorageT* >(data)->storage.bytes;
+    new (storage) sensor_msgs::Image; // placement new
+    data->convertible = storage;
+
+    sensor_msgs::Image* img = static_cast< sensor_msgs::Image* >(storage);
+    // get borrowed reference
+    py::handle<> handle(py::borrowed(obj_ptr));
+    py::object o(handle);
+    img->header = py::extract<std_msgs::Header>(o.attr("header"));
+    img->height = py::extract<uint32_t>(o.attr("height"));
+    img->width = py::extract<uint32_t>(o.attr("width"));
+    img->is_bigendian = py::extract<bool>(o.attr("is_bigendian"));
+    img->step = py::extract<uint32_t>(o.attr("step"));
+    std::string data_str = py::extract< std::string >(o.attr("data"));
+    //img->data = std::vector<uint8_t>(data_str.c_str(), data_str.c_str()+data_str.length());
+    img->data.insert(img->data.end(), data_str.c_str(), data_str.c_str()+data_str.length());
+  }
+
+  static PyObject * convert(const sensor_msgs::Image& img) {
+    namespace py = boost::python;
+    py::object module = py::import("sensor_msgs.msg._Image");
+    py::object MsgType = module.attr("Image");
+    py::object msg = MsgType();
+    msg.attr("header") = img.header;
+    msg.attr("height") = img.height;
+    msg.attr("width") = img.width;
+    // create empty python list
+    msg.attr("is_bigendian") = img.is_bigendian;
+    msg.attr("step") = img.step;
+    std::string data_str(img.data.begin(), img.data.end());
+    msg.attr("data") = data_str;
+    return py::incref(msg.ptr());
+  }
+
+  static void RegisterConverter() {
+    namespace py = boost::python;
+    py::to_python_converter< sensor_msgs::Image, SensorMsgsImage >();
+    py::converter::registry::push_back(
+        &SensorMsgsImage::convertible,
+        &SensorMsgsImage::construct,
+        py::type_id< sensor_msgs::Image >());
+  }
+};
+
 
 struct SensorMsgsCameraInfo {
 
