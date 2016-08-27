@@ -556,22 +556,25 @@ struct SensorMsgsCameraInfo {
     msg->width = py::extract< uint32_t >(o.attr("width"));
     msg->distortion_model = py::extract< std::string >(o.attr("distortion_model"));
     // TODO tuple or list?
-    py::tuple D_lst = py::extract<py::tuple>(o.attr("D"));
+    //typedef py::tuple seq_type;
+    //typedef py::list seq_type;
+    typedef py::object seq_type;
+    seq_type D_lst = py::extract<seq_type>(o.attr("D"));
     for (int i=0; i < py::len(D_lst); ++i) {
       double di(py::extract<double>(D_lst[i]));
       msg->D.push_back(di);
     }
-    py::tuple K_lst = py::extract<py::tuple>(o.attr("K"));
+    seq_type K_lst = py::extract<seq_type>(o.attr("K"));
     for (int i=0; i < py::len(K_lst); ++i) {
       double ki(py::extract<double>(K_lst[i]));
       msg->K[i] = ki;
     }
-    py::tuple R_lst = py::extract<py::tuple>(o.attr("R"));
+    seq_type R_lst = py::extract<seq_type>(o.attr("R"));
     for (int i=0; i < py::len(K_lst); ++i) {
       double Ri(py::extract<double>(K_lst[i]));
       msg->R[i] = Ri;
     }
-    py::tuple P_lst = py::extract<py::tuple>(o.attr("P"));
+    seq_type P_lst = py::extract<seq_type>(o.attr("P"));
     for (int i=0; i < py::len(P_lst); ++i) {
       double Pi(py::extract<double>(P_lst[i]));
       msg->P[i] = Pi;
@@ -607,7 +610,6 @@ struct SensorMsgsCameraInfo {
       R_lst.append(ci.P[i]);
     }
     // TODO roi,binning
-
     return py::incref(msg.ptr());
   }
 
