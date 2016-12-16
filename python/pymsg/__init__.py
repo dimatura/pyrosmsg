@@ -8,6 +8,4 @@
 #
 # @=
 
-
-
 from libpymsg import *

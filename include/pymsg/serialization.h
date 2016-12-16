@@ -12,13 +12,12 @@
 #ifndef SERIALIZATION_H_QC30JWRG
 #define SERIALIZATION_H_QC30JWRG
 
-#include <boost/python.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+#include <memory>
+
 
 #include <ros/ros.h>
 
-namespace ca { namespace pyvox {
+namespace ca { namespace pymsg {
 
 template <class MsgT>
 std::string MessageToString(const MsgT& msg) {

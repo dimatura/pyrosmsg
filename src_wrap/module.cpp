@@ -8,8 +8,10 @@
  *
  **@=*/
 
-#include <boost/python.hpp>
-#include <boost/shared_ptr.hpp>
+
+#include <memory>
+
+#include <pybind11/pybind11.h>
 
 #include <ros/ros.h>
 #include <ros/time.h>
@@ -25,9 +27,72 @@
 #include <geometry_msgs/Transform.h>
 #include <geometry_msgs/TransformStamped.h>
 
+//#include "serialization.h"
+
+namespace pybind11 { namespace detail {
+
+template <> struct type_caster<ros::Time> {
+  public:
+   PYBIND11_TYPE_CASTER(ros::Time, _("ros::Time"));
+
+   // python -> cpp
+   bool load(handle src, bool) {
+     PyObject *obj(src.ptr());
+     if (!PyObject_HasAttrString(obj, "secs")) { return false; }
+     if (!PyObject_HasAttrString(obj, "nsecs")) { return false; }
+
+     value.sec = (src.attr("secs")).cast<uint32_t>();
+     value.nsec = (src.attr("nsecs")).cast<uint32_t>();
+     return true;
+   }
+
+   // cpp -> python
+   static handle cast(ros::Time src, return_value_policy policy, handle parent) {
+     object rospy = module::import("rospy");
+     object TimeType = rospy.attr("Time");
+     object pyts = TimeType();
+     pyts.attr("secs") = pybind11::cast(src.sec);
+     pyts.attr("nsecs") = pybind11::cast(src.nsec);
+     pyts.inc_ref();
+     return pyts;
+   }
+};
+
+template <> struct type_caster<std_msgs::Header> {
+  public:
+   PYBIND11_TYPE_CASTER(std_msgs::Header, _("std_msgs::Header"));
+
+   // python -> cpp
+   bool load(handle src, bool) {
+     PyObject *obj(src.ptr());
+
+     value.seq = src.attr("seq").cast<uint32_t>();
+     value.stamp = src.attr("stamp").cast<ros::Time>();
+     value.frame_id = src.attr("frame_id").cast<std::string>();
+     return true;
+   }
+
+   // cpp -> python
+   static handle cast(std_msgs::Header header, return_value_policy policy, handle parent) {
+     object mod = module::import("std_msgs.msg._Header");
+     object MsgType = mod.attr("Header");
+     object msg = MsgType();
+     msg.attr("seq") = pybind11::cast(header.seq);
+     msg.attr("stamp") = pybind11::cast(header.stamp);
+     msg.attr("frame_id") = pybind11::cast(header.frame_id);
+     msg.inc_ref();
+     return msg;
+   }
+};
+
+
+
+} }
+
+#if 0
 static inline
 void * ConvertibleRosMessage(PyObject * obj_ptr, const std::string& name) {
-    namespace py = boost::python;
+    namespace py = pybind11;
     if (!PyObject_HasAttrString(obj_ptr, "_type")) { return NULL; }
     py::handle<> handle(py::borrowed(obj_ptr));
     py::object o(handle);
@@ -35,56 +100,9 @@ void * ConvertibleRosMessage(PyObject * obj_ptr, const std::string& name) {
     if (msg_type != name) { return NULL; }
     return obj_ptr;
 }
+#endif
 
-// TODO duration is pretty much same as time
-struct RosTime {
-
-  static void * convertible(PyObject * obj_ptr) {
-    namespace py = boost::python;
-    // TODO: do a check()?
-    if (!PyObject_HasAttrString(obj_ptr, "secs")) { return NULL; }
-    if (!PyObject_HasAttrString(obj_ptr, "nsecs")) { return NULL; }
-    return obj_ptr;
-  }
-
-  static void construct(PyObject * obj_ptr,
-                        boost::python::converter::rvalue_from_python_stage1_data* data) {
-    namespace py = boost::python;
-    typedef py::converter::rvalue_from_python_storage< ros::Time > StorageT;
-    void* storage = reinterpret_cast< StorageT* >(data)->storage.bytes;
-    new (storage) ros::Time; // placement new
-    data->convertible = storage;
-    ros::Time* t = static_cast< ros::Time* >(storage);
-    py::handle<> handle(py::borrowed(obj_ptr));
-    py::object o(handle);
-    t->sec = py::extract<uint32_t>(o.attr("secs"));
-    t->nsec = py::extract<uint32_t>(o.attr("nsecs"));
-  }
-
-  // to-python converter
-  static PyObject * convert(ros::Time const& ts) {
-    namespace py = boost::python;
-    //return py::incref(py::object( s.data().ptr() ));
-    py::object rospy = py::import("rospy");
-    //int info = py::extract<int>(rospy.attr("INFO"));
-    py::object TimeType = rospy.attr("Time");
-    py::object pyts = TimeType();
-    pyts.attr("secs") = ts.sec;
-    pyts.attr("nsecs") = ts.nsec;
-    return py::incref(pyts.ptr());
-  }
-
-  static void RegisterConverter() {
-    namespace py = boost::python;
-    py::to_python_converter< ros::Time, RosTime >();
-    py::converter::registry::push_back(
-        &RosTime::convertible,
-        &RosTime::construct,
-        py::type_id< ros::Time >());
-  }
-
-};
-
+#if 0
 struct StdMsgsHeader {
 
   static void * convertible(PyObject * obj_ptr) {
@@ -637,19 +655,6 @@ void print_centroid(const sensor_msgs::PointCloud2& cloud) {
   std::cout << "centroid = [" << cx << " " << cy << " " << cz << "]" << std::endl;
 }
 
-ros::Time increment_ts( const ros::Time& ts ) {
-  std::cerr << "ts.sec = " << ts.sec << ", ts.nsec = " << ts.nsec << std::endl;
-  ros::Time newts(ts.sec + 1, ts.nsec + 1);
-  std::cerr << "newts.sec = " << newts.sec << ", newts.nsec = " << newts.nsec << std::endl;
-  return newts;
-}
-
-std_msgs::Header make_header( int seq ) {
-  std_msgs::Header out;
-  out.seq = seq;
-  return out;
-}
-
 sensor_msgs::PointCloud2 make_pc2( int rows ) {
   sensor_msgs::PointCloud2 pc;
   pc.width = rows;
@@ -671,12 +676,44 @@ void print_cam_info(const sensor_msgs::CameraInfo& ci) {
   std::cout << ci.distortion_model << "\n";
   std::cout << ci.K[8] << " " << ci.R[8] << " " << ci.P[8] << "\n";
 }
+#endif
+
+ros::Time make_time() {
+  ros::Time ts;
+  ts.sec = 28;
+  ts.nsec = 999;
+  return ts;
+}
+
+void print_time(const ros::Time& ts) {
+  std::cerr << "ts.sec = " << ts.sec << std::endl;
+  std::cerr << "ts.nsec = " << ts.nsec << std::endl;
+}
+
+ros::Time increment_ts( const ros::Time& ts ) {
+  std::cerr << "ts.sec = " << ts.sec << ", ts.nsec = " << ts.nsec << std::endl;
+  ros::Time newts(ts.sec + 1, ts.nsec + 1);
+  std::cerr << "newts.sec = " << newts.sec << ", newts.nsec = " << newts.nsec << std::endl;
+  return newts;
+}
+
+std_msgs::Header make_header(int seq) {
+  std_msgs::Header out;
+  out.seq = seq;
+  return out;
+}
+
+void print_header_seq(std_msgs::Header& header) {
+  std::cerr << "header.seq = " << header.seq << std::endl;
+}
 
 
-BOOST_PYTHON_MODULE(libpymsg) {
-  namespace py = boost::python;
+PYBIND11_PLUGIN(libpymsg) {
+  namespace py = pybind11;
 
+#if 0
   RosTime::RegisterConverter();
+
   StdMsgsHeader::RegisterConverter();
   SensorMsgsPointField::RegisterConverter();
   SensorMsgsPointCloud2::RegisterConverter();
@@ -687,8 +724,16 @@ BOOST_PYTHON_MODULE(libpymsg) {
   GeometryMsgsTransform::RegisterConverter();
   GeometryMsgsTransformStamped::RegisterConverter();
   py::def("print_centroid", &print_centroid);
-  py::def("make_header", &make_header);
   py::def("make_pc2", &make_pc2);
-  py::def("increment_ts", &increment_ts);
   py::def("print_cam_info", &print_cam_info);
+#endif
+
+  py::module m("libpymsg", "libpymsg plugin");
+  m.def("print_time", &print_time, "print time");
+  m.def("make_time", &make_time, "make time");
+
+  m.def("make_header", &make_header);
+  m.def("increment_ts", &increment_ts);
+  m.def("print_header_seq", &print_header_seq);
+  return m.ptr();
 }
