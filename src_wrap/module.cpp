@@ -294,7 +294,8 @@ template <> struct type_caster<sensor_msgs::Image> {
     value.header = src.attr("header").cast<std_msgs::Header>();
     value.height = src.attr("height").cast<uint32_t>();
     value.width = src.attr("width").cast<uint32_t>();
-    value.is_bigendian = src.attr("is_bigendian").cast<bool>();
+    value.encoding = src.attr("encoding").cast<std::string>();
+    value.is_bigendian = src.attr("is_bigendian").cast<int>();
     value.step = src.attr("step").cast<uint32_t>();
 
     std::string data_str = src.attr("data").cast<std::string>();
@@ -310,7 +311,7 @@ template <> struct type_caster<sensor_msgs::Image> {
     msg.attr("header") = pybind11::cast(cpp_msg.header);
     msg.attr("height") = pybind11::cast(cpp_msg.height);
     msg.attr("width") = pybind11::cast(cpp_msg.width);
-    // create empty python list
+    msg.attr("encoding") = pybind11::bytes(cpp_msg.encoding);
     msg.attr("is_bigendian") = pybind11::cast(cpp_msg.is_bigendian);
     msg.attr("step") = pybind11::cast(cpp_msg.step);
 
@@ -451,6 +452,30 @@ void print_header_seq(std_msgs::Header& header) {
   std::cerr << "header.seq = " << header.seq << std::endl;
 }
 
+void print_img(const sensor_msgs::Image& img) {
+  std::cerr << "img.width = " << img.width << std::endl;
+  std::cerr << "img.height = " << img.height << std::endl;
+  std::cerr << "img.step = " << img.step << std::endl;
+  std::cerr << "[";
+  for (int i=0; i < img.width*img.height; ++i) {
+    std::cerr << (int)img.data[i] << ", ";
+  }
+  std::cerr << "]\n";
+}
+
+sensor_msgs::Image make_img(int width, int height) {
+  sensor_msgs::Image msg;
+  msg.width = width;
+  msg.height = height;
+  msg.encoding = "8UC1";
+  msg.step = width;
+  for (int i=0; i < height; ++i) {
+    for (int j=0; j < width; ++j) {
+      msg.data.push_back(width*i + j);
+    }
+  }
+  return msg;
+}
 
 PYBIND11_PLUGIN(libpymsg) {
   namespace py = pybind11;
@@ -466,5 +491,7 @@ PYBIND11_PLUGIN(libpymsg) {
   m.def("make_header", &make_header);
   m.def("increment_ts", &increment_ts);
   m.def("print_header_seq", &print_header_seq);
+  m.def("print_img", &print_img);
+  m.def("make_img", &make_img);
   return m.ptr();
 }
