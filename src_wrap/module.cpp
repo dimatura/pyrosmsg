@@ -286,242 +286,105 @@ template <> struct type_caster<sensor_msgs::PointCloud2> {
   }
 };
 
+template <> struct type_caster<sensor_msgs::Image> {
+  public:
+  PYBIND11_TYPE_CASTER(sensor_msgs::Image, _("sensor_msgs::Image"));
+  bool load(handle src, bool) {
+    if (!is_ros_msg_type(src, "sensor_msgs/Image")) { return false; }
+    value.header = src.attr("header").cast<std_msgs::Header>();
+    value.height = src.attr("height").cast<uint32_t>();
+    value.width = src.attr("width").cast<uint32_t>();
+    value.is_bigendian = src.attr("is_bigendian").cast<bool>();
+    value.step = src.attr("step").cast<uint32_t>();
+
+    std::string data_str = src.attr("data").cast<std::string>();
+    //value.data = std::vector<uint8_t>(data_str.c_str(), data_str.c_str()+data_str.length());
+    value.data.insert(value.data.end(), data_str.c_str(), data_str.c_str()+data_str.length());
+    return true;
+  }
+
+  static handle cast(sensor_msgs::Image cpp_msg, return_value_policy policy, handle parent) {
+    object mod = module::import("sensor_msgs.msg._Image");
+    object MsgType = mod.attr("Image");
+    object msg = MsgType();
+    msg.attr("header") = pybind11::cast(cpp_msg.header);
+    msg.attr("height") = pybind11::cast(cpp_msg.height);
+    msg.attr("width") = pybind11::cast(cpp_msg.width);
+    // create empty python list
+    msg.attr("is_bigendian") = pybind11::cast(cpp_msg.is_bigendian);
+    msg.attr("step") = pybind11::cast(cpp_msg.step);
+
+    // TODO not sure if this works
+    pybind11::bytes data_str(reinterpret_cast<const char *>(&cpp_msg.data[0]), cpp_msg.data.size());
+    //std::string data_str(img.data.begin(), img.data.end());
+    msg.attr("data") = data_str;
+
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+template <> struct type_caster<sensor_msgs::CameraInfo> {
+  public:
+  PYBIND11_TYPE_CASTER(sensor_msgs::CameraInfo, _("sensor_msgs::CameraInfo"));
+  bool load(handle src, bool) {
+    if (!is_ros_msg_type(src, "sensor_msgs/CameraInfo")) { return false; }
+
+    value.height = src.attr("height").cast<uint32_t>();
+    value.width = src.attr("width").cast<uint32_t>();
+    value.distortion_model = src.attr("distortion_model").cast<std::string>();
+
+    {
+      for (auto item : src.attr("D")) {
+        value.D.push_back(item.cast<double>());
+      }
+    }
+    {
+      int i=0;
+      for (auto item : src.attr("K")) {
+        value.K[i] = item.cast<double>();
+        ++i;
+      }
+    }
+    {
+      int i=0;
+      for (auto item : src.attr("R")) {
+        value.R[i] = item.cast<double>();
+        ++i;
+      }
+    }
+    {
+      int i=0;
+      for (auto item : src.attr("P")) {
+        value.P[i] = item.cast<double>();
+        ++i;
+      }
+    }
+
+    value.header = src.attr("header").cast<std_msgs::Header>();
+
+    return true;
+  }
+
+  static handle cast(sensor_msgs::CameraInfo cpp_msg, return_value_policy policy, handle parent) {
+    object mod = module::import("sensor_msgs.msg._CameraInfo");
+    object MsgType = mod.attr("CameraInfo");
+    object msg = MsgType();
+    msg.inc_ref();
+    return msg;
+  }
+};
 
 } }
 
-#if 0
-struct SensorMsgsPointCloud2 {
-
-  static void * convertible(PyObject * obj_ptr) {
-    return ConvertibleRosMessage(obj_ptr, "sensor_msgs/PointCloud2");
-  }
-
-  static void construct(PyObject * obj_ptr,
-                        boost::python::converter::rvalue_from_python_stage1_data* data) {
-    namespace py = boost::python;
-    typedef py::converter::rvalue_from_python_storage< sensor_msgs::PointCloud2 > StorageT;
-    void* storage = reinterpret_cast< StorageT* >(data)->storage.bytes;
-    new (storage) sensor_msgs::PointCloud2; // placement new
-    data->convertible = storage;
-
-    sensor_msgs::PointCloud2* pc = static_cast< sensor_msgs::PointCloud2* >(storage);
-    // get borrowed reference
-    py::handle<> handle(py::borrowed(obj_ptr));
-    py::object o(handle);
-    pc->header = py::extract<std_msgs::Header>(o.attr("header"));
-    pc->height = py::extract<uint32_t>(o.attr("height"));
-    pc->width = py::extract<uint32_t>(o.attr("width"));
-    py::list field_lst = py::extract<py::list>(o.attr("fields"));
-    //std::cerr << "py::len(field_lst) = " << py::len(field_lst) << std::endl;
-    for (int i=0; i < py::len(field_lst); ++i) {
-      sensor_msgs::PointField pf(py::extract< sensor_msgs::PointField >(field_lst[i]));
-      pc->fields.push_back(pf);
-    }
-    pc->is_bigendian = py::extract<bool>(o.attr("is_bigendian"));
-    pc->point_step = py::extract<uint32_t>(o.attr("point_step"));
-    pc->row_step = py::extract<uint32_t>(o.attr("row_step"));
-    std::string data_str = py::extract< std::string >(o.attr("data"));
-    //pc->data = std::vector<uint8_t>(data_str.c_str(), data_str.c_str()+data_str.length());
-    pc->data.insert(pc->data.end(), data_str.c_str(), data_str.c_str()+data_str.length());
-    pc->is_dense = py::extract<uint32_t>(o.attr("is_dense"));
-  }
-
-  static PyObject * convert(const sensor_msgs::PointCloud2& pc) {
-    namespace py = boost::python;
-    //return py::incref(py::object( s.data().ptr() ));
-    py::object module = py::import("sensor_msgs.msg._PointCloud2");
-    py::object MsgType = module.attr("PointCloud2");
-    py::object msg = MsgType();
-    msg.attr("header") = pc.header;
-    msg.attr("height") = pc.height;
-    msg.attr("width") = pc.width;
-    // create empty python list
-    py::list field_lst = py::extract<py::list>(msg.attr("fields"));
-    //field_lst.append(pc.fields[0]);
-    //std::cerr << "py::len(field_lst) = " << py::len(field_lst) << std::endl;
-    //std::cerr << "pc.fields.size() = " << pc.fields.size() << std::endl;
-    for ( size_t i=0; i<pc.fields.size(); ++i ) {
-      const sensor_msgs::PointField& pf(pc.fields[i]);
-      //std::cerr << "pf.name = " << pf.name << std::endl;
-      //py::object opf(pf);
-      field_lst.append(pf);
-      //std::cerr << "bla1" << std::endl;
-    }
-    //std::cerr << "py::len(field_lst) = " << py::len(field_lst) << std::endl;
-    //std::cerr << "bla2" << std::endl;
-    msg.attr("fields") = field_lst;
-    msg.attr("is_bigendian") = pc.is_bigendian;
-    msg.attr("point_step") = pc.point_step;
-    msg.attr("row_step") = pc.row_step;
-    std::string data_str(pc.data.begin(), pc.data.end());
-    msg.attr("data") = data_str;
-    msg.attr("is_dense") = pc.is_dense;
-    //std::cerr << "bla" << std::endl;
-    return py::incref(msg.ptr());
-  }
-
-  static void RegisterConverter() {
-    namespace py = boost::python;
-    //py::to_python_converter<sensor_msgs::PointCloud2,
-    //SensorMsgsPointCloud2>();
-    //std::cerr << "registering cpp pc from python pc converter" << std::endl;
-    py::to_python_converter< sensor_msgs::PointCloud2, SensorMsgsPointCloud2 >();
-    py::converter::registry::push_back(
-        &SensorMsgsPointCloud2::convertible,
-        &SensorMsgsPointCloud2::construct,
-        py::type_id< sensor_msgs::PointCloud2 >());
-  }
-
-};
-
-struct SensorMsgsImage {
-
-  static void * convertible(PyObject * obj_ptr) {
-    return ConvertibleRosMessage(obj_ptr, "sensor_msgs/Image");
-  }
-
-  static void construct(PyObject * obj_ptr,
-                        boost::python::converter::rvalue_from_python_stage1_data* data) {
-    namespace py = boost::python;
-    typedef py::converter::rvalue_from_python_storage< sensor_msgs::Image > StorageT;
-    void* storage = reinterpret_cast< StorageT* >(data)->storage.bytes;
-    new (storage) sensor_msgs::Image; // placement new
-    data->convertible = storage;
-
-    sensor_msgs::Image* img = static_cast< sensor_msgs::Image* >(storage);
-    // get borrowed reference
-    py::handle<> handle(py::borrowed(obj_ptr));
-    py::object o(handle);
-    img->header = py::extract<std_msgs::Header>(o.attr("header"));
-    img->height = py::extract<uint32_t>(o.attr("height"));
-    img->width = py::extract<uint32_t>(o.attr("width"));
-    img->is_bigendian = py::extract<bool>(o.attr("is_bigendian"));
-    img->step = py::extract<uint32_t>(o.attr("step"));
-    std::string data_str = py::extract< std::string >(o.attr("data"));
-    //img->data = std::vector<uint8_t>(data_str.c_str(), data_str.c_str()+data_str.length());
-    img->data.insert(img->data.end(), data_str.c_str(), data_str.c_str()+data_str.length());
-  }
-
-  static PyObject * convert(const sensor_msgs::Image& img) {
-    namespace py = boost::python;
-    py::object module = py::import("sensor_msgs.msg._Image");
-    py::object MsgType = module.attr("Image");
-    py::object msg = MsgType();
-    msg.attr("header") = img.header;
-    msg.attr("height") = img.height;
-    msg.attr("width") = img.width;
-    // create empty python list
-    msg.attr("is_bigendian") = img.is_bigendian;
-    msg.attr("step") = img.step;
-    std::string data_str(img.data.begin(), img.data.end());
-    msg.attr("data") = data_str;
-    return py::incref(msg.ptr());
-  }
-
-  static void RegisterConverter() {
-    namespace py = boost::python;
-    py::to_python_converter< sensor_msgs::Image, SensorMsgsImage >();
-    py::converter::registry::push_back(
-        &SensorMsgsImage::convertible,
-        &SensorMsgsImage::construct,
-        py::type_id< sensor_msgs::Image >());
-  }
-};
-
-
-struct SensorMsgsCameraInfo {
-
-  static void * convertible(PyObject * obj_ptr) {
-    return ConvertibleRosMessage(obj_ptr, "sensor_msgs/CameraInfo");
-  }
-
-  static void construct(PyObject * obj_ptr,
-                        boost::python::converter::rvalue_from_python_stage1_data* data) {
-    namespace py = boost::python;
-    typedef py::converter::rvalue_from_python_storage< sensor_msgs::CameraInfo > StorageT;
-    void* storage = reinterpret_cast< StorageT* >(data)->storage.bytes;
-    new (storage) sensor_msgs::CameraInfo;
-    data->convertible = storage;
-    sensor_msgs::CameraInfo* msg = static_cast< sensor_msgs::CameraInfo* >(storage);
-    py::handle<> handle(py::borrowed(obj_ptr));
-    py::object o(handle);
-
-    msg->height = py::extract< uint32_t >(o.attr("height"));
-    msg->width = py::extract< uint32_t >(o.attr("width"));
-    msg->distortion_model = py::extract< std::string >(o.attr("distortion_model"));
-    // TODO tuple or list?
-    //typedef py::tuple seq_type;
-    //typedef py::list seq_type;
-    typedef py::object seq_type;
-    seq_type D_lst = py::extract<seq_type>(o.attr("D"));
-    for (int i=0; i < py::len(D_lst); ++i) {
-      double di(py::extract<double>(D_lst[i]));
-      msg->D.push_back(di);
-    }
-    seq_type K_lst = py::extract<seq_type>(o.attr("K"));
-    for (int i=0; i < py::len(K_lst); ++i) {
-      double ki(py::extract<double>(K_lst[i]));
-      msg->K[i] = ki;
-    }
-    seq_type R_lst = py::extract<seq_type>(o.attr("R"));
-    for (int i=0; i < py::len(K_lst); ++i) {
-      double Ri(py::extract<double>(K_lst[i]));
-      msg->R[i] = Ri;
-    }
-    seq_type P_lst = py::extract<seq_type>(o.attr("P"));
-    for (int i=0; i < py::len(P_lst); ++i) {
-      double Pi(py::extract<double>(P_lst[i]));
-      msg->P[i] = Pi;
-    }
-    msg->header = py::extract<std_msgs::Header>(o.attr("header"));
-    // TODO roi, binning
-  }
-
-  static PyObject * convert(const sensor_msgs::CameraInfo & ci) {
-    namespace py = boost::python;
-    //return py::incref(py::object( s.data().ptr() ));
-    py::object module = py::import("sensor_msgs.msg._CameraInfo");
-    py::object MsgType = module.attr("CameraInfo");
-    py::object msg = MsgType();
-    msg.attr("header") = ci.header;
-    msg.attr("height") = ci.height;
-    msg.attr("width") = ci.width;
-    msg.attr("distortion_model") = ci.distortion_model;
-    py::list D_lst = py::extract<py::list>(msg.attr("D"));
-    for ( size_t i=0; i<ci.D.size(); ++i ) {
-      D_lst.append(ci.D[i]);
-    }
-    py::list K_lst = py::extract<py::list>(msg.attr("K"));
-    for ( size_t i=0; i<9; ++i ) {
-      K_lst.append(ci.K[i]);
-    }
-    py::list R_lst = py::extract<py::list>(msg.attr("R"));
-    for ( size_t i=0; i<9; ++i ) {
-      R_lst.append(ci.R[i]);
-    }
-    py::list P_lst = py::extract<py::list>(msg.attr("P"));
-    for ( size_t i=0; i<12; ++i ) {
-      R_lst.append(ci.P[i]);
-    }
-    // TODO roi,binning
-    return py::incref(msg.ptr());
-  }
-
-  static void RegisterConverter() {
-    namespace py = boost::python;
-    py::to_python_converter< sensor_msgs::CameraInfo, SensorMsgsCameraInfo >();
-    py::converter::registry::push_back(
-        &SensorMsgsCameraInfo::convertible,
-        &SensorMsgsCameraInfo::construct,
-        py::type_id< sensor_msgs::CameraInfo >());
-  }
-};
 
 void print_cam_info(const sensor_msgs::CameraInfo& ci) {
+  std::cout << "distortion model\n";
   std::cout << ci.distortion_model << "\n";
+  std::cout << "K R P [8]\n";
   std::cout << ci.K[8] << " " << ci.R[8] << " " << ci.P[8] << "\n";
+  std::cout << "\n";
 }
-#endif
 
 // just a sanity check
 void print_centroid(const sensor_msgs::PointCloud2& cloud) {
@@ -592,11 +455,9 @@ void print_header_seq(std_msgs::Header& header) {
 PYBIND11_PLUGIN(libpymsg) {
   namespace py = pybind11;
 
-#if 0
-  py::def("print_cam_info", &print_cam_info);
-#endif
-
   py::module m("libpymsg", "libpymsg plugin");
+  m.def("print_cam_info", &print_cam_info);
+
   m.def("print_centroid", &print_centroid);
   m.def("make_pc2", &make_pc2);
   m.def("print_time", &print_time, "print time");

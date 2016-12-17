@@ -2,6 +2,7 @@
 import numpy as np
 import rospy
 from std_msgs.msg import Header
+from sensor_msgs.msg import CameraInfo
 
 import pymsg
 
@@ -33,3 +34,9 @@ print 'pc_msg.width:', pc_msg.width
 
 pymsg.print_centroid(pc_msg)
 print pc_data.mean(0)
+
+print 'ci'
+
+ci = CameraInfo()
+print ci
+pymsg.print_cam_info(ci)
