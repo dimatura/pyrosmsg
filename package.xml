@@ -13,7 +13,7 @@
   <buildtool_depend>catkin_simple</buildtool_depend>
 
   <depend>geometry_msgs</depend>
-  <depend>navigation_msgs</depend>
+  <depend>nav_msgs</depend>
   <depend>python_module</depend>
   <depend>roscpp</depend>
   <depend>rospy</depend>
