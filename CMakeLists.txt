@@ -24,22 +24,30 @@ find_package(Eigen3 REQUIRED)
 set(PY_PROJECT_NAME ${PROJECT_NAME})
 set(PY_PACKAGE_DIR python/${PROJECT_NAME})
 
-add_python_export_library(${PY_PROJECT_NAME} ${PY_PACKAGE_DIR}
-    src_wrap/module.cpp
-)
-
 catkin_python_setup()
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES pymsg
-  CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy sensor_msgs std_msgs visualization_msgs
+  LIBRARIES
+  CATKIN_DEPENDS
+    geometry_msgs
+    nav_msgs
+    roscpp
+    rospy
+    sensor_msgs
+    std_msgs 
+    visualization_msgs
+    cmake_modules
 #  DEPENDS system_lib
 )
 
 ###########
 ## Build ##
 ###########
+
+add_python_export_library(${PY_PROJECT_NAME} ${PY_PACKAGE_DIR}
+    src_wrap/module.cpp
+)
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
@@ -52,5 +60,5 @@ include_directories(
 
 target_link_libraries(${PY_PROJECT_NAME}
   ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
 )
+

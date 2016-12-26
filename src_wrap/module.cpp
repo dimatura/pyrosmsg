@@ -111,6 +111,11 @@ sensor_msgs::Image make_img(int width, int height) {
 
 PYBIND11_PLUGIN(libpymsg) {
   namespace py = pybind11;
+  /**
+   * note - this stuff does nothing. just sanity
+   * checks. all the important stuff is in
+   * the header.
+   */
 
   py::module m("libpymsg", "libpymsg plugin");
 
