@@ -12,7 +12,7 @@
 
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
-  <depend>python_module</depend>
+  <depend>pybind11_module</depend>
   <depend>roscpp</depend>
   <depend>rospy</depend>
   <depend>sensor_msgs</depend>

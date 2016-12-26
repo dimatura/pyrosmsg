@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   geometry_msgs
   nav_msgs
-  python_module
+  pybind11_module
   roscpp
   rospy
   sensor_msgs
