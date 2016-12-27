@@ -8,7 +8,9 @@
  *
  **@=*/
 
+
 #include <pymsg/converters.hpp>
+#include <pymsg/serialization.hpp>
 
 void print_cam_info(const sensor_msgs::CameraInfo& ci) {
   std::cout << "distortion model\n";
@@ -33,6 +35,26 @@ void print_centroid(const sensor_msgs::PointCloud2& cloud) {
   cz /= cloud.width;
   std::cout << "centroid = [" << cx << " " << cy << " " << cz << "]" << std::endl;
 }
+
+void print_centroid2(const std::string& smsg) {
+  sensor_msgs::PointCloud2 cloud;
+  ca::pymsg::deserialize<sensor_msgs::PointCloud2>(smsg, cloud);
+
+
+  double cx = 0., cy = 0., cz = 0.;
+  for (size_t i=0; i < cloud.width; ++i) {
+    float x = *reinterpret_cast<const float*>(&cloud.data[i*cloud.point_step]);
+    float y = *reinterpret_cast<const float*>(&cloud.data[i*cloud.point_step + sizeof(float)]);
+    float z = *reinterpret_cast<const float*>(&cloud.data[i*cloud.point_step + 2*sizeof(float)]);
+    cx += x; cy += y; cz += z;
+  }
+  std::cerr << "cloud.width = " << cloud.width << std::endl;
+  cx /= cloud.width;
+  cy /= cloud.width;
+  cz /= cloud.width;
+  std::cout << "centroid = [" << cx << " " << cy << " " << cz << "]" << std::endl;
+}
+
 
 sensor_msgs::PointCloud2 make_pc2(int rows) {
   sensor_msgs::PointCloud2 pc;
@@ -120,16 +142,17 @@ PYBIND11_PLUGIN(libpymsg) {
   py::module m("libpymsg", "libpymsg plugin");
 
   m.def("print_cam_info", &print_cam_info);
-
   m.def("print_centroid", &print_centroid);
+  m.def("print_centroid2", &print_centroid2);
   m.def("make_pc2", &make_pc2);
   m.def("print_time", &print_time, "print time");
   m.def("make_time", &make_time, "make time");
-
   m.def("make_header", &make_header);
   m.def("increment_ts", &increment_ts);
   m.def("print_header_seq", &print_header_seq);
   m.def("print_img", &print_img);
   m.def("make_img", &make_img);
+
+
   return m.ptr();
 }
