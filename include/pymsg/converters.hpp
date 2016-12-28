@@ -246,7 +246,7 @@ template <> struct type_caster<sensor_msgs::PointCloud2> {
     value.row_step = (src.attr("row_step")).cast<uint32_t>();
     std::string data_str = (src.attr("data")).cast<std::string>();
     value.data.insert(value.data.end(), data_str.c_str(), data_str.c_str()+data_str.length());
-    value.is_dense = (src.attr("is_dense")).cast<uint32_t>();
+    value.is_dense = (src.attr("is_dense")).cast<bool>();
     return true;
   }
 
