@@ -3,9 +3,6 @@ project(pymsg)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   geometry_msgs
@@ -30,14 +27,15 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES
   CATKIN_DEPENDS
+    cmake_modules
     geometry_msgs
     nav_msgs
+    pybind11_module
     roscpp
     rospy
     sensor_msgs
-    std_msgs 
+    std_msgs
     visualization_msgs
-    cmake_modules
 #  DEPENDS system_lib
 )
 
@@ -45,20 +43,17 @@ catkin_package(
 ## Build ##
 ###########
 
+
+include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${Eigen3_INCLUDE_DIRS}
+)
+
 add_python_export_library(${PY_PROJECT_NAME} ${PY_PACKAGE_DIR}
     src_wrap/module.cpp
 )
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-# include_directories(include)
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-  ${Eigen3_INCLUDE_DIRS}
-)
-
 target_link_libraries(${PY_PROJECT_NAME}
-  ${catkin_LIBRARIES}
+    ${catkin_LIBRARIES}
 )
-
