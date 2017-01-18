@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(NUMPY REQUIRED)
-find_package(Eigen3 REQUIRED)
+find_package(Eigen3 3.3.1 REQUIRED)
 
 set(PY_PROJECT_NAME ${PROJECT_NAME})
 set(PY_PACKAGE_DIR python/${PROJECT_NAME})
@@ -46,8 +46,8 @@ catkin_package(
 
 include_directories(
     include
+    ${Eigen3_INCLUDE_DIR}
     ${catkin_INCLUDE_DIRS}
-    ${Eigen3_INCLUDE_DIRS}
 )
 
 add_python_export_library(${PY_PROJECT_NAME} ${PY_PACKAGE_DIR}
