@@ -131,7 +131,7 @@ sensor_msgs::Image make_img(int width, int height) {
 }
 
 
-PYBIND11_PLUGIN(libpymsg) {
+PYBIND11_MODULE(libpymsg, m) {
   namespace py = pybind11;
   /**
    * note - this stuff does nothing. just sanity
@@ -139,7 +139,8 @@ PYBIND11_PLUGIN(libpymsg) {
    * the header.
    */
 
-  py::module m("libpymsg", "libpymsg plugin");
+  //py::module m("libpymsg", "libpymsg plugin");
+  m.doc() = "libpymsg module";
 
   m.def("print_cam_info", &print_cam_info);
   m.def("print_centroid", &print_centroid);
@@ -152,7 +153,4 @@ PYBIND11_PLUGIN(libpymsg) {
   m.def("print_header_seq", &print_header_seq);
   m.def("print_img", &print_img);
   m.def("make_img", &make_img);
-
-
-  return m.ptr();
 }
