@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(pymsg)
+project(pyrosmsg)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
@@ -7,7 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   geometry_msgs
   nav_msgs
-  pybind11_module
+  pybind11_catkin
   roscpp
   rospy
   sensor_msgs
@@ -16,10 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(NUMPY REQUIRED)
-find_package(Eigen3 3.3.1 REQUIRED)
-
-set(PY_PROJECT_NAME ${PROJECT_NAME})
-set(PY_PACKAGE_DIR python/${PROJECT_NAME})
+find_package(pybind11 REQUIRED)
 
 catkin_python_setup()
 
@@ -30,30 +27,22 @@ catkin_package(
     cmake_modules
     geometry_msgs
     nav_msgs
-    pybind11_module
+    pybind11_catkin
     roscpp
     rospy
     sensor_msgs
     std_msgs
     visualization_msgs
-#  DEPENDS system_lib
+    #DEPENDS system_lib
 )
-
-###########
-## Build ##
-###########
-
 
 include_directories(
     include
-    ${Eigen3_INCLUDE_DIR}
     ${catkin_INCLUDE_DIRS}
+    #${PYBIND11_INCLUDE_DIRS}
 )
 
-add_python_export_library(${PY_PROJECT_NAME} ${PY_PACKAGE_DIR}
+message("pybind11_include_dir " ${PYBIND11_INCLUDE_DIRS})
+pybind_add_module(libpyrosmsg
     src_wrap/module.cpp
-)
-
-target_link_libraries(${PY_PROJECT_NAME}
-    ${catkin_LIBRARIES}
 )

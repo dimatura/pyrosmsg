@@ -8,22 +8,22 @@ from sensor_msgs.msg import Image
 
 import cv_bridge
 
-import pymsg
+import pyrosmsg
 import pypcd
 
-#ts = pymsg.make_time()
+#ts = pyrosmsg.make_time()
 #print ts
 #
 #tsp = rospy.Time()
-#pymsg.print_time(tsp)
+#pyrosmsg.print_time(tsp)
 #
-#hdr = pymsg.make_header(32)
+#hdr = pyrosmsg.make_header(32)
 #print hdr
 #
-#pymsg.print_header_seq(hdr)
+#pyrosmsg.print_header_seq(hdr)
 #
 #print
-#cloud = pymsg.make_pc2(32)
+#cloud = pyrosmsg.make_pc2(32)
 #print cloud
 #
 #print
@@ -36,7 +36,7 @@ print type(pc_msg)
 
 print 'pc_msg.width:', pc_msg.width
 
-pymsg.print_centroid(pc_msg)
+pyrosmsg.print_centroid(pc_msg)
 print pc_data.mean(0)
 
 #
@@ -44,7 +44,7 @@ print pc_data.mean(0)
 #
 #ci = CameraInfo()
 #print ci
-#pymsg.print_cam_info(ci)
+#pyrosmsg.print_cam_info(ci)
 #
 #print 'img'
 #print
@@ -55,9 +55,9 @@ print pc_data.mean(0)
 #img_msg = bridge.cv2_to_imgmsg(cv_img, encoding='passthrough')
 #print img_msg
 #print '---'
-#pymsg.print_img(img_msg)
+#pyrosmsg.print_img(img_msg)
 #
 #print '***'
-#img_msg2 = pymsg.make_img(8, 8)
+#img_msg2 = pyrosmsg.make_img(8, 8)
 #print img_msg2
 #cv_img2 = bridge.imgmsg_to_cv2(img_msg2, desired_encoding='passthrough')

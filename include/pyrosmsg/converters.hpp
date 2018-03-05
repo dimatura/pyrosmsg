@@ -80,7 +80,9 @@ template <> struct type_caster<std_msgs::Header> {
      object msg = MsgType();
      msg.attr("seq") = pybind11::cast(header.seq);
      msg.attr("stamp") = pybind11::cast(header.stamp);
-     msg.attr("frame_id") = pybind11::cast(header.frame_id);
+     // avoid !!python/unicode problem.
+     //msg.attr("frame_id") = pybind11::cast(header.frame_id);
+     msg.attr("frame_id") = pybind11::bytes(reinterpret_cast<const char *>(&header.frame_id[0]), header.frame_id.size());
      msg.inc_ref();
      return msg;
    }
@@ -196,7 +198,8 @@ template <> struct type_caster<geometry_msgs::TransformStamped> {
     object MsgType = mod.attr("TransformStamped");
     object msg = MsgType();
     msg.attr("header") = pybind11::cast(cpp_msg.header);
-    msg.attr("child_frame_id") = pybind11::cast(cpp_msg.child_frame_id);
+    //msg.attr("child_frame_id") = pybind11::cast(cpp_msg.child_frame_id);
+    msg.attr("child_frame_id") = pybind11::bytes(reinterpret_cast<const char *>(&cpp_msg.child_frame_id[0]), cpp_msg.child_frame_id.size());
     msg.attr("transform") = pybind11::cast(cpp_msg.transform);
     msg.inc_ref();
     return msg;
@@ -219,7 +222,10 @@ template <> struct type_caster<sensor_msgs::PointField> {
     object mod = module::import("sensor_msgs.msg._PointField");
     object MsgType = mod.attr("PointField");
     object msg = MsgType();
-    msg.attr("name") = pybind11::cast(cpp_msg.name);
+    // avoid !!python/unicode problem.
+    //msg.attr("name") = pybind11::cast(cpp_msg.name);
+    //msg.attr("name") = PyString_FromString(cpp_msg.name.c_str());
+    msg.attr("name") = pybind11::bytes(reinterpret_cast<const char*>(&cpp_msg.name[0]), cpp_msg.name.size());
     msg.attr("offset") = pybind11::cast(cpp_msg.offset);
     msg.attr("datatype") = pybind11::cast(cpp_msg.datatype);
     msg.attr("count") = pybind11::cast(cpp_msg.count);
@@ -268,11 +274,9 @@ template <> struct type_caster<sensor_msgs::PointCloud2> {
     msg.attr("is_bigendian") = pybind11::cast(cpp_msg.is_bigendian);
     msg.attr("point_step") = pybind11::cast(cpp_msg.point_step);
     msg.attr("row_step") = pybind11::cast(cpp_msg.row_step);
-    std::string data_str(cpp_msg.data.begin(), cpp_msg.data.end());
-    pybind11::bytes data_str2(data_str);
-    msg.attr("data") = data_str2;
+    //msg.attr("data") = pybind11::bytes(std::string(cpp_msg.data.begin(), cpp_msg.data.end()));
+    msg.attr("data") = pybind11::bytes(reinterpret_cast<const char *>(&cpp_msg.data[0]), cpp_msg.data.size());
     msg.attr("is_dense") = pybind11::cast(cpp_msg.is_dense);
-
     msg.inc_ref();
     return msg;
   }
@@ -289,9 +293,7 @@ template <> struct type_caster<sensor_msgs::Image> {
     value.encoding = src.attr("encoding").cast<std::string>();
     value.is_bigendian = src.attr("is_bigendian").cast<int>();
     value.step = src.attr("step").cast<uint32_t>();
-
     std::string data_str = src.attr("data").cast<std::string>();
-    //value.data = std::vector<uint8_t>(data_str.c_str(), data_str.c_str()+data_str.length());
     value.data.insert(value.data.end(), data_str.c_str(), data_str.c_str()+data_str.length());
     return true;
   }
@@ -306,12 +308,8 @@ template <> struct type_caster<sensor_msgs::Image> {
     msg.attr("encoding") = pybind11::bytes(cpp_msg.encoding);
     msg.attr("is_bigendian") = pybind11::cast(cpp_msg.is_bigendian);
     msg.attr("step") = pybind11::cast(cpp_msg.step);
-
-    // TODO not sure if this works
-    pybind11::bytes data_str(reinterpret_cast<const char *>(&cpp_msg.data[0]), cpp_msg.data.size());
-    //std::string data_str(img.data.begin(), img.data.end());
-    msg.attr("data") = data_str;
-
+    //msg.attr("data") = pybind11::bytes(std::string(cpp_msg.data.begin(), cpp_msg.data.end()));
+    msg.attr("data") = pybind11::bytes(reinterpret_cast<const char *>(&cpp_msg.data[0]), cpp_msg.data.size());
     msg.inc_ref();
     return msg;
   }
@@ -363,6 +361,7 @@ template <> struct type_caster<sensor_msgs::CameraInfo> {
     object mod = module::import("sensor_msgs.msg._CameraInfo");
     object MsgType = mod.attr("CameraInfo");
     object msg = MsgType();
+
     msg.inc_ref();
     return msg;
   }

@@ -8,4 +8,4 @@
 #
 # @=
 
-from libpymsg import *
+from libpyrosmsg import *

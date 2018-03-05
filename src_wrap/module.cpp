@@ -8,9 +8,15 @@
  *
  **@=*/
 
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 
-#include <pymsg/converters.hpp>
-#include <pymsg/serialization.hpp>
+#include <pyrosmsg/converters.hpp>
+#include <pyrosmsg/serialization.hpp>
+
+namespace pyrosmsg {
+
+namespace py = pybind11;
 
 void print_cam_info(const sensor_msgs::CameraInfo& ci) {
   std::cout << "distortion model\n";
@@ -20,7 +26,6 @@ void print_cam_info(const sensor_msgs::CameraInfo& ci) {
   std::cout << "\n";
 }
 
-// just a sanity check
 void print_centroid(const sensor_msgs::PointCloud2& cloud) {
   double cx = 0., cy = 0., cz = 0.;
   for (size_t i=0; i < cloud.width; ++i) {
@@ -37,9 +42,9 @@ void print_centroid(const sensor_msgs::PointCloud2& cloud) {
 }
 
 void print_centroid2(const std::string& smsg) {
+  // using generic serialization method
   sensor_msgs::PointCloud2 cloud;
-  ca::pymsg::deserialize<sensor_msgs::PointCloud2>(smsg, cloud);
-
+  pyrosmsg::deserialize<sensor_msgs::PointCloud2>(smsg, cloud);
 
   double cx = 0., cy = 0., cz = 0.;
   for (size_t i=0; i < cloud.width; ++i) {
@@ -55,7 +60,6 @@ void print_centroid2(const std::string& smsg) {
   std::cout << "centroid = [" << cx << " " << cy << " " << cz << "]" << std::endl;
 }
 
-
 sensor_msgs::PointCloud2 make_pc2(int rows) {
   sensor_msgs::PointCloud2 pc;
   pc.width = rows;
@@ -70,11 +74,46 @@ sensor_msgs::PointCloud2 make_pc2(int rows) {
   float data[rows];
   for (int i=0; i < rows; ++i) { data[i] = 28.0; }
   pc.data.insert(pc.data.end(),
-                 reinterpret_cast<uint8_t *>(data),
-                 reinterpret_cast<uint8_t *>(data+rows));
+                 reinterpret_cast<const uint8_t *>(data),
+                 reinterpret_cast<const uint8_t *>(data+rows));
   return pc;
 }
 
+sensor_msgs::PointCloud2 make_pc2_from_numpy(py::array_t<float, 2> xyz) {
+  sensor_msgs::PointCloud2 pc;
+
+  sensor_msgs::PointField pfx;
+  pfx.name =  "x";
+  pfx.offset = 0;
+  pfx.datatype = sensor_msgs::PointField::FLOAT32;
+  pfx.count = 1;
+  pc.fields.push_back(pfx);
+
+  sensor_msgs::PointField pfy;
+  pfx.name =  "y";
+  pfx.offset = 4;
+  pfx.datatype = sensor_msgs::PointField::FLOAT32;
+  pfx.count = 1;
+  pc.fields.push_back(pfy);
+
+  sensor_msgs::PointField pfz;
+  pfx.name =  "z";
+  pfx.offset = 4;
+  pfx.datatype = sensor_msgs::PointField::FLOAT32;
+  pfx.count = 1;
+  pc.fields.push_back(pfz);
+
+  pc.point_step = sizeof(float)*3;
+
+  // making assumptions on c-style numpy!
+  auto xyz_buf = xyz.unchecked();
+  pc.data.insert(pc.data.end(),
+                 reinterpret_cast<const uint8_t *>(xyz_buf.data(0, 0)),
+                 reinterpret_cast<const uint8_t *>(xyz_buf.data(0, 0)+xyz_buf.nbytes()));
+  pc.width = xyz.shape(0);
+  pc.height = 1;
+  return pc;
+}
 
 ros::Time make_time() {
   ros::Time ts;
@@ -95,8 +134,9 @@ ros::Time increment_ts( const ros::Time& ts ) {
   return newts;
 }
 
-std_msgs::Header make_header(int seq) {
+std_msgs::Header make_header(int seq, std::string frame_id) {
   std_msgs::Header out;
+  out.frame_id = frame_id;
   out.seq = seq;
   return out;
 }
@@ -130,27 +170,25 @@ sensor_msgs::Image make_img(int width, int height) {
   return msg;
 }
 
+}
 
-PYBIND11_MODULE(libpymsg, m) {
-  namespace py = pybind11;
-  /**
-   * note - this stuff does nothing. just sanity
-   * checks. all the important stuff is in
-   * the header.
-   */
+PYBIND11_MODULE(libpyrosmsg, m) {
+  // note - these methods are just sanity
+  // checks. all the important stuff is in
+  // the header.
 
-  //py::module m("libpymsg", "libpymsg plugin");
-  m.doc() = "libpymsg module";
+  m.doc() = "libpyrosmsg module";
 
-  m.def("print_cam_info", &print_cam_info);
-  m.def("print_centroid", &print_centroid);
-  m.def("print_centroid2", &print_centroid2);
-  m.def("make_pc2", &make_pc2);
-  m.def("print_time", &print_time, "print time");
-  m.def("make_time", &make_time, "make time");
-  m.def("make_header", &make_header);
-  m.def("increment_ts", &increment_ts);
-  m.def("print_header_seq", &print_header_seq);
-  m.def("print_img", &print_img);
-  m.def("make_img", &make_img);
+  m.def("print_cam_info", &pyrosmsg::print_cam_info);
+  m.def("print_centroid", &pyrosmsg::print_centroid);
+  m.def("print_centroid2", &pyrosmsg::print_centroid2);
+  m.def("make_pc2", &pyrosmsg::make_pc2);
+  m.def("make_pc2_from_numpy", &pyrosmsg::make_pc2_from_numpy);
+  m.def("print_time", &pyrosmsg::print_time, "print time");
+  m.def("make_time", &pyrosmsg::make_time, "make time");
+  m.def("make_header", &pyrosmsg::make_header);
+  m.def("increment_ts", &pyrosmsg::increment_ts);
+  m.def("print_header_seq", &pyrosmsg::print_header_seq);
+  m.def("print_img", &pyrosmsg::print_img);
+  m.def("make_img", &pyrosmsg::make_img);
 }

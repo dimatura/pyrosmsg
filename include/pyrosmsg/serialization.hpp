@@ -16,7 +16,7 @@
 
 #include <ros/ros.h>
 
-namespace ca { namespace pymsg {
+namespace pyrosmsg {
 
 // in python
 // buf = StringIO.StringIO()
@@ -30,8 +30,8 @@ namespace ca { namespace pymsg {
 template <class MsgT>
 std::string serialize(const MsgT& msg) {
   uint32_t serial_size = ros::serialization::serializationLength(msg);
-  // in practice we could directly use a string.c_str() but that is living dangerously
-  //boost::shared_array<uint8_t> obuffer(new uint8_t[serial_size]);
+  // we could directly use a string.c_str(), but not sure if
+  // that could have ownership issues
   uint8_t* obuffer = new uint8_t[serial_size];
   ros::serialization::OStream os(obuffer, serial_size);
   ros::serialization::serialize(os, msg);
@@ -51,6 +51,6 @@ void deserialize(const std::string s, MsgT& msg) {
   delete[] ibuffer;
 }
 
-} }
+}
 
 #endif /* end of include guard: SERIALIZATION_H_QC30JWRG */

@@ -1,7 +1,6 @@
 
 import cStringIO as StringIO
 import numpy as np
-from pymsg import libpymsg
 
 from sensor_msgs.msg import PointCloud2
 
@@ -10,7 +9,7 @@ from sensor_msgs.msg import PointCloud2
 
 import pypcd
 
-import pymsg.libpymsg
+import pyrosmsg
 
 pc = pypcd.PointCloud.from_path('./tmp.pcd')
 msg = pc.to_msg()
@@ -20,11 +19,11 @@ msg = pc.to_msg()
 
 def with_caster(m):
     # 38.4 us per loop,
-    pymsg.libpymsg.print_centroid(m)
+    pyrosmsg.print_centroid(m)
 
 def with_serial(m):
     # 117 us
     buf = StringIO.StringIO()
     m.serialize(buf)
     smsg = buf.getvalue()
-    pymsg.libpymsg.print_centroid2(smsg)
+    pyrosmsg.print_centroid2(smsg)
