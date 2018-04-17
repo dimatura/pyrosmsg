@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs
   pybind11_catkin
+  pybind11
   roscpp
   rospy
   sensor_msgs
@@ -16,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(NUMPY REQUIRED)
-find_package(pybind11 REQUIRED)
+#find_package(pybind11 REQUIRED)
 
 catkin_python_setup()
 
@@ -42,7 +43,7 @@ include_directories(
     #${PYBIND11_INCLUDE_DIRS}
 )
 
-message("pybind11_include_dir " ${PYBIND11_INCLUDE_DIRS})
+#message("pybind11_include_dir " ${PYBIND11_INCLUDE_DIRS})
 pybind_add_module(libpyrosmsg
     src_wrap/module.cpp
 )
