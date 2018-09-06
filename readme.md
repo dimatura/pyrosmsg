@@ -92,7 +92,7 @@ def my_pc2_callback(pc2msg):
 
 # Platforms
 
-Only tested with Ubuntu 16.04, ROS Kinetic, and Python 2.7. Would probably work with other Linux and (Indigo and ulterior) ROS distros.
+Only tested with Ubuntu 16.04, ROS Kinetic, and Python 2.7. Would probably work with other Linux and (Indigo and newer) ROS distros.
 Python 3, probably not without minor modifications.
 
 
