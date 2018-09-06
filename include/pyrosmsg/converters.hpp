@@ -19,8 +19,6 @@
 #include <geometry_msgs/Transform.h>
 #include <geometry_msgs/TransformStamped.h>
 
-//#include "serialization.h"
-
 
 static inline
 bool is_ros_msg_type(pybind11::handle src, const std::string& msg_type_name) {

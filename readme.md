@@ -8,6 +8,8 @@ Bidirectional pybind11 converters for a few ROS messages.
 
 The converters will accept Python messages and convert them to C++ messages or viceversa.
 
+This library only really makes sense for C++ code wrapped with pybind11 for use with Python.
+
 # Why
 
 The two main languages ROS supports are C++ and Python. For any given message type, ROS
@@ -32,6 +34,67 @@ it is far less than the (de)serialization method described above.
 
 One drawback is that the converters are (currently) written manually. It's a fairly mechanical process,
 and in theory it could be automated, but I have not done so yet. I would welcome converters for other message types.
+
+# How
+
+This is a catkin ROS package, and as such should be installed in a catkin workspace like any other.
+
+To use from the C++ side, simply `#include <pyrosmsg/pyrosmsg.h>`. This will register `pybind11` converters that
+can be used to transparently accept and return the support ROS messages in your code.
+
+To use from the Python side, simply `import pyrosmsg` before using wrapped functions.
+
+So in your C++ code,
+
+```cpp
+// this code is in a pybind11-wrapped module called, say, 'mycloudlib'
+
+#include <sensor_msgs/PointCloud2.h>
+#include <pyrosmsg/pyrosmsg.h>
+
+// etc
+
+void process_pointcloud(const sensor_msgs::PointCloud2& cloud) {
+    // do fast C++ stuff with your point cloud here
+}
+
+```
+
+And in your python code, presumably a ROS node,
+
+```python
+from sensor_msgs.msg import PointCloud2
+import pyrosmsg
+import mycloudlib
+
+def my_pc2_callback(pc2msg):
+    # pc2msg is a *python* sensor_msgs.msg.PointCloud2
+    # transparently pass the PointCloud2 to your C++ code.
+    # under the hood, pyrosmsg will create a C++ copy of the message
+    # and pass it to the wrapped mycloudlib function.
+    mycloudlib.process_pointcloud(pc2msg)
+```
+
+
+# Currently supported messages
+
+- `ros::Time`
+- `std_msgs::Header`
+- `geometry_msgs::Point`
+- `geometry_msgs::Vector3`
+- `geometry_msgs::Quaternion`
+- `geometry_msgs::Transform`
+- `geometry_msgs::TransformStamped`
+- `sensor_msgs::PointField`
+- `sensor_msgs::PointCloud2`
+- `sensor_msgs::Image`
+
+
+# Platforms
+
+Only tested with Ubuntu 16.04, ROS Kinetic, and Python 2.7. Would probably work with Ubuntu 18.04 and ROS Melodic.
+Python 3, probably not without minor modifications.
+
 
 # LICENSE
 
