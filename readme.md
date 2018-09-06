@@ -95,6 +95,14 @@ def my_pc2_callback(pc2msg):
 Only tested with Ubuntu 16.04, ROS Kinetic, and Python 2.7. Would probably work with other Linux and (Indigo and newer) ROS distros.
 Python 3, probably not without minor modifications.
 
+# TODO
+
+It would be nice to avoid copying data, if possible. In my own experience copying image and point cloud data within a process has 
+never been a bottleneck compared to whatever data processing I perform with the data -- after all, the copy is just
+a `memcpy` of a contiguous chunk a memory. But for massive amounts of data unnecessary copying is a drag.
+In theory, this should be possible -- the only difficulty is correct memory management across the Python and C++
+border.
+
 
 # LICENSE
 
