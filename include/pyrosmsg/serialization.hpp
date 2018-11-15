@@ -8,7 +8,6 @@
  *
  **@=*/
 
-
 #ifndef SERIALIZATION_H_QC30JWRG
 #define SERIALIZATION_H_QC30JWRG
 
@@ -45,12 +44,11 @@ template <class MsgT>
 void deserialize(const std::string s, MsgT& msg) {
   uint32_t serial_size = s.length();
   uint8_t* ibuffer = new uint8_t[serial_size]();
-  std::copy(s.c_str(), s.c_str()+s.length(), &ibuffer[0]);
+  std::copy(s.c_str(), s.c_str() + s.length(), &ibuffer[0]);
   ros::serialization::IStream istream(&ibuffer[0], serial_size);
   ros::serialization::deserialize(istream, msg);
   delete[] ibuffer;
 }
-
 }
 
 #endif /* end of include guard: SERIALIZATION_H_QC30JWRG */
