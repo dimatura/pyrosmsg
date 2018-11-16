@@ -1,6 +1,11 @@
 #ifndef CONVERTERS_H_L7OWNAZ8
 #define CONVERTERS_H_L7OWNAZ8
 
+// TODO
+// should break this up by package,
+// or even msg type -- otherwise this file will grow
+// unwieldy, and also might affect compilation times
+
 #include <memory>
 
 #include <pybind11/pybind11.h>
@@ -10,6 +15,9 @@
 #include <ros/time.h>
 
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Transform.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -435,6 +443,62 @@ struct type_caster<sensor_msgs::CameraInfo> {
     object MsgType = mod.attr("CameraInfo");
     object msg = MsgType();
 
+    // TODO untested
+
+    msg.attr("height") = cpp_msg.height;
+    msg.attr("width") = cpp_msg.width;
+
+    msg.attr("distortion_model") = cpp_msg.distortion_model;
+
+    for (size_t i = 0; i < cpp_msg.D.size(); ++i) {
+      pybind11::list D = msg.attr("D");
+      D[i] = cpp_msg.K[i];
+    }
+
+    for (size_t i = 0; i < cpp_msg.K.size(); ++i) {
+      pybind11::list K = msg.attr("K");
+      K[i] = cpp_msg.K[i];
+    }
+
+    for (size_t i = 0; i < cpp_msg.R.size(); ++i) {
+      pybind11::list R = msg.attr("R");
+      R[i] = cpp_msg.K[i];
+    }
+
+    for (size_t i = 0; i < cpp_msg.P.size(); ++i) {
+      pybind11::list P = msg.attr("P");
+      P[i] = cpp_msg.P[i];
+    }
+
+    msg.attr("header") = pybind11::cast(cpp_msg.header);
+
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+template <>
+struct type_caster<geometry_msgs::Pose> {
+ public:
+  PYBIND11_TYPE_CASTER(geometry_msgs::Pose, _("geometry_msgs::Pose"));
+  bool load(handle src, bool) {
+    if (!is_ros_msg_type(src, "geometry_msgs/Pose")) {
+      return false;
+    }
+    value.position = (src.attr("position")).cast<geometry_msgs::Point>();
+    value.orientation =
+        (src.attr("orientation")).cast<geometry_msgs::Quaternion>();
+    return true;
+  }
+
+  static handle cast(geometry_msgs::Pose cpp_msg,
+                     return_value_policy policy,
+                     handle parent) {
+    object mod = module::import("geometry_msgs.msg._Pose");
+    object MsgType = mod.attr("Pose");
+    object msg = MsgType();
+    msg.attr("position") = pybind11::cast(cpp_msg.position);
+    msg.attr("orientation") = pybind11::cast(cpp_msg.orientation);
     msg.inc_ref();
     return msg;
   }
