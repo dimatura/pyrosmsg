@@ -106,4 +106,4 @@ border.
 
 # LICENSE
 
-BSD.
+BSD, see LICENSE.
