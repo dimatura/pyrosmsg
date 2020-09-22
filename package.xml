@@ -11,10 +11,11 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>geometry_msgs</depend>
+  <depend>moveit_msgs</depend>
   <depend>nav_msgs</depend>
-  <!--<depend>pybind11_module</depend>-->
   <depend>pybind11_catkin</depend>
   <depend>roscpp</depend>
+  <depend>trajectory_msgs</depend>
   <depend>rospy</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
