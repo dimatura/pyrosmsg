@@ -68,10 +68,10 @@ struct type_caster<ros::Duration>
                      handle parent)
   {
     object mod = module::import("rospy");
-    object MsgType = mod.attr("rospy.JointTrajectory");
+    object MsgType = mod.attr("Duration");
     object msg = MsgType();
-    msg.attr("sec") = pybind11::cast(cpp_msg.sec);
-    msg.attr("nsec") = pybind11::cast(cpp_msg.nsec);
+    msg.attr("secs") = pybind11::cast(cpp_msg.sec);
+    msg.attr("nsecs") = pybind11::cast(cpp_msg.nsec);
     msg.inc_ref();
     return msg;
   }
@@ -143,11 +143,7 @@ struct type_caster<std_msgs::Header>
     object msg = MsgType();
     msg.attr("seq") = pybind11::cast(header.seq);
     msg.attr("stamp") = pybind11::cast(header.stamp);
-    // avoid !!python/unicode problem.
-    // msg.attr("frame_id") = pybind11::cast(header.frame_id);
-    msg.attr("frame_id") =
-        pybind11::bytes(reinterpret_cast<const char *>(&header.frame_id[0]),
-                        header.frame_id.size());
+    msg.attr("frame_id") = pybind11::cast(header.frame_id);
     msg.inc_ref();
     return msg;
   }
@@ -652,8 +648,8 @@ struct type_caster<trajectory_msgs::JointTrajectoryPoint>
                      return_value_policy policy,
                      handle parent)
   {
-    object mod = module::import("trajectory_msgs.msg._TrajectoryPoint");
-    object MsgType = mod.attr("TrajectoryPoint");
+    object mod = module::import("trajectory_msgs.msg._JointTrajectoryPoint");
+    object MsgType = mod.attr("JointTrajectoryPoint");
     object msg = MsgType();
     msg.attr("positions") = pybind11::cast(cpp_msg.positions);
     msg.attr("velocities") = pybind11::cast(cpp_msg.velocities);
@@ -689,8 +685,8 @@ struct type_caster<trajectory_msgs::MultiDOFJointTrajectoryPoint>
                      return_value_policy policy,
                      handle parent)
   {
-    object mod = module::import("trajectory_msgs.msg._TrajectoryPoint");
-    object MsgType = mod.attr("TrajectoryPoint");
+    object mod = module::import("trajectory_msgs.msg._MultiDOFTrajectoryPoint");
+    object MsgType = mod.attr("MultiJointTrajectoryPoint");
     object msg = MsgType();
     msg.attr("transforms") = pybind11::cast(cpp_msg.transforms);
     msg.attr("velocities") = pybind11::cast(cpp_msg.velocities);
