@@ -17,6 +17,7 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Point.h>
 #include <moveit_msgs/RobotTrajectory.h>
+#include <moveit_msgs/RobotState.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Quaternion.h>
@@ -762,6 +763,118 @@ struct type_caster<trajectory_msgs::MultiDOFJointTrajectory>
     return msg;
   }
 };
+
+template<>
+struct type_caster<sensor_msgs::JointState>
+{
+ public:
+ PYBIND11_TYPE_CASTER(sensor_msgs::JointState, _("sensor_msgs::JointState"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "sensor_msgs/JointState"))
+    {
+      return false;
+    }
+    value.header = src.attr("header").cast<std_msgs::Header>();
+    value.name = src.attr("name").cast < std::vector<std::string>>();
+    value.position = src.attr("position").cast<std::vector<double>>();
+    value.velocity = src.attr("velocity").cast<std::vector<double>>();
+    value.effort = src.attr("effort").cast<std::vector<double>>();
+    return true;
+  }
+
+  static handle cast(sensor_msgs::JointState cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("sensor_msgs.msg._JointState");
+    object MsgType = mod.attr("JointState");
+    object msg = MsgType();
+    msg.attr("header") = pybind11::cast(cpp_msg.header);
+    msg.attr("name") = pybind11::cast(cpp_msg.name);
+    msg.attr("position") = pybind11::cast(cpp_msg.position);
+    msg.attr("velocity") = pybind11::cast(cpp_msg.velocity);
+    msg.attr("effort") = pybind11::cast(cpp_msg.effort);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+template<>
+struct type_caster<moveit_msgs::AttachedCollisionObject>
+{
+ public:
+ PYBIND11_TYPE_CASTER(moveit_msgs::AttachedCollisionObject, _("moveit_msgs::AttachedCollisionObject"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "moveit_msgs/AttachedCollisionObject"))
+    {
+      return false;
+    }
+    value.link_name = src.attr("link_name").cast<std::string>();
+    value.object = src.attr("object").cast<moveit_msgs::CollisionObject>();
+    value.touch_links = src.attr("touch_links").cast<std::vector<std::string>>();
+    value.detach_posture = src.attr("detach_posture").cast<trajectory_msgs::JointTrajectory>();
+    value.weight = src.attr("weight").cast<double>();
+    return true;
+  }
+
+  static handle cast(moveit_msgs::AttachedCollisionObject cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("moveit_msgs.msg._AttachedCollisionObject");
+    object MsgType = mod.attr("AttachedCollisionObject");
+    object msg = MsgType();
+    msg.attr("link_name") = pybind11::cast(cpp_msg.link_name);
+    msg.attr("object") = pybind11::cast(cpp_msg.object);
+    msg.attr("touch_links") = pybind11::cast(cpp_msg.touch_links);
+    msg.attr("detach_posture") = pybind11::cast(cpp_msg.detach_posture);
+    msg.attr("weight") = pybind11::cast(cpp_msg.weight);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+
+template<>
+struct type_caster<moveit_msgs::RobotState>
+{
+ public:
+ PYBIND11_TYPE_CASTER(moveit_msgs::RobotState, _("moveit_msgs::RobotState"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "moveit_msgs/RobotState"))
+    {
+      return false;
+    }
+    value.joint_state = src.attr("joint_state").cast<sensor_msgs::JointState>();
+//    value.multi_dof_joint_state = src.attr("multi_dof_joint_state").cast<sensor_msgs::MultiDOFJointState>();
+//    value.attached_collision_objects = src.attr(
+//        "attached_collision_objects").cast<std::vector<moveit_msgs::AttachedCollisionObject>>();
+    value.is_diff = src.attr("is_diff").cast<bool>();
+    return true;
+  }
+
+  static handle cast(moveit_msgs::RobotState cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("moveit_msgs.msg._RobotState");
+    object MsgType = mod.attr("RobotState");
+    object msg = MsgType();
+    msg.attr("joint_state") = pybind11::cast(cpp_msg.joint_state);
+//    msg.attr("multi_dof_joint_state") = pybind11::cast(cpp_msg.multi_dof_joint_state);
+//    msg.attr("attached_collision_objects") = pybind11::cast(cpp_msg.attached_collision_objects);
+    msg.attr("is_diff") = pybind11::cast(cpp_msg.is_diff);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
 
 template<>
 struct type_caster<moveit_msgs::RobotTrajectory>
