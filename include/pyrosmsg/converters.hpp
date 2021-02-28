@@ -17,6 +17,7 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Point.h>
 #include <moveit_msgs/RobotTrajectory.h>
+#include <moveit_msgs/PlanningScene.h>
 #include <moveit_msgs/RobotState.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -777,7 +778,7 @@ struct type_caster<sensor_msgs::JointState>
       return false;
     }
     value.header = src.attr("header").cast<std_msgs::Header>();
-    value.name = src.attr("name").cast < std::vector<std::string>>();
+    value.name = src.attr("name").cast<std::vector<std::string>>();
     value.position = src.attr("position").cast<std::vector<double>>();
     value.velocity = src.attr("velocity").cast<std::vector<double>>();
     value.effort = src.attr("effort").cast<std::vector<double>>();
@@ -903,6 +904,141 @@ struct type_caster<moveit_msgs::RobotTrajectory>
     object msg = MsgType();
     msg.attr("joint_trajectory") = pybind11::cast(cpp_msg.joint_trajectory);
     msg.attr("multi_dof_joint_trajectory") = pybind11::cast(cpp_msg.multi_dof_joint_trajectory);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+template<>
+struct type_caster<shape_msgs::SolidPrimitive>
+{
+ public:
+ PYBIND11_TYPE_CASTER(shape_msgs::SolidPrimitive, _("shape_msgs::CollisionObject"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "shape_msgs/SolidPrimitive"))
+    {
+      return false;
+    }
+    value.dimensions = src.attr("dimensions").cast<std::vector<double>>();
+    return true;
+  }
+
+  static handle cast(shape_msgs::SolidPrimitive cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("shape_msgs.msg._SolidPrimitive");
+    object MsgType = mod.attr("SolidPrimitive");
+    object msg = MsgType();
+    msg.attr("dimensions") = pybind11::cast(cpp_msg.dimensions);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+
+template<>
+struct type_caster<moveit_msgs::CollisionObject>
+{
+ public:
+ PYBIND11_TYPE_CASTER(moveit_msgs::CollisionObject, _("moveit_msgs::CollisionObject"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "moveit_msgs/CollisionObject"))
+    {
+      return false;
+    }
+    value.header = src.attr("header").cast<std_msgs::Header>();
+    value.id = src.attr("id").cast<std::string>();
+    value.primitives = src.attr("primitives").cast<std::vector<shape_msgs::SolidPrimitive>>();
+    value.primitive_poses = src.attr("primitive_poses").cast<std::vector<geometry_msgs::Pose>>();
+    value.operation = src.attr("operation").cast<int8_t>();
+    return true;
+  }
+
+  static handle cast(moveit_msgs::CollisionObject cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("moveit_msgs.msg._CollisionObject");
+    object MsgType = mod.attr("CollisionObject");
+    object msg = MsgType();
+    msg.attr("header") = pybind11::cast(cpp_msg.header);
+    msg.attr("id") = pybind11::cast(cpp_msg.id);
+    msg.attr("primitives") = pybind11::cast(cpp_msg.primitives);
+    msg.attr("primitive_poses") = pybind11::cast(cpp_msg.primitive_poses);
+    msg.attr("operation") = pybind11::cast(cpp_msg.operation);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+
+template<>
+struct type_caster<moveit_msgs::PlanningSceneWorld>
+{
+ public:
+ PYBIND11_TYPE_CASTER(moveit_msgs::PlanningSceneWorld, _("moveit_msgs::PlanningSceneWorld"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "moveit_msgs/PlanningSceneWorld"))
+    {
+      return false;
+    }
+    value.collision_objects = src.attr("collision_objects").cast<std::vector<moveit_msgs::CollisionObject>>();
+    return true;
+  }
+
+  static handle cast(moveit_msgs::PlanningSceneWorld cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("moveit_msgs.msg._PlanningSceneWorld");
+    object MsgType = mod.attr("PlanningSceneWorld");
+    object msg = MsgType();
+    msg.attr("collision_objects") = pybind11::cast(cpp_msg.collision_objects);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+
+template<>
+struct type_caster<moveit_msgs::PlanningScene>
+{
+ public:
+ PYBIND11_TYPE_CASTER(moveit_msgs::PlanningScene, _("moveit_msgs::PlanningScene"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "moveit_msgs/PlanningScene"))
+    {
+      return false;
+    }
+    value.name = src.attr("name").cast<std::string>();
+    value.robot_state = src.attr("robot_state").cast<moveit_msgs::RobotState>();
+    value.robot_model_name = src.attr("robot_model_name").cast<std::string>();
+    value.world = src.attr("world").cast<moveit_msgs::PlanningSceneWorld>();
+    value.is_diff = src.attr("is_diff").cast<bool>();
+    return true;
+  }
+
+  static handle cast(moveit_msgs::PlanningScene cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("moveit_msgs.msg._PlanningScene");
+    object MsgType = mod.attr("PlanningScene");
+    object msg = MsgType();
+    msg.attr("name") = pybind11::cast(cpp_msg.name);
+    msg.attr("robot_state") = pybind11::cast(cpp_msg.robot_state);
+    msg.attr("robot_model_name") = pybind11::cast(cpp_msg.robot_model_name);
+    msg.attr("world") = pybind11::cast(cpp_msg.world);
+    msg.attr("is_diff") = pybind11::cast(cpp_msg.is_diff);
     msg.inc_ref();
     return msg;
   }
