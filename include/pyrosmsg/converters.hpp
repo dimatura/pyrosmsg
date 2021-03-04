@@ -1,5 +1,4 @@
-#ifndef CONVERTERS_H_L7OWNAZ8
-#define CONVERTERS_H_L7OWNAZ8
+#pragma once
 
 // TODO
 // should break this up by package,
@@ -101,10 +100,10 @@ struct type_caster<std_msgs::Header> {
     msg.attr("seq") = pybind11::cast(header.seq);
     msg.attr("stamp") = pybind11::cast(header.stamp);
     // avoid !!python/unicode problem.
-    // msg.attr("frame_id") = pybind11::cast(header.frame_id);
-    msg.attr("frame_id") =
-        pybind11::bytes(reinterpret_cast<const char *>(&header.frame_id[0]),
-                        header.frame_id.size());
+    msg.attr("frame_id") = pybind11::cast(header.frame_id);
+    // msg.attr("frame_id") =
+    //    pybind11::bytes(reinterpret_cast<const char *>(&header.frame_id[0]),
+    //                    header.frame_id.size());
     msg.inc_ref();
     return msg;
   }
@@ -247,10 +246,10 @@ struct type_caster<geometry_msgs::TransformStamped> {
     object MsgType = mod.attr("TransformStamped");
     object msg = MsgType();
     msg.attr("header") = pybind11::cast(cpp_msg.header);
-    // msg.attr("child_frame_id") = pybind11::cast(cpp_msg.child_frame_id);
-    msg.attr("child_frame_id") = pybind11::bytes(
-        reinterpret_cast<const char *>(&cpp_msg.child_frame_id[0]),
-        cpp_msg.child_frame_id.size());
+    msg.attr("child_frame_id") = pybind11::cast(cpp_msg.child_frame_id);
+    // msg.attr("child_frame_id") = pybind11::bytes(
+    //    reinterpret_cast<const char *>(&cpp_msg.child_frame_id[0]),
+    //    cpp_msg.child_frame_id.size());
     msg.attr("transform") = pybind11::cast(cpp_msg.transform);
     msg.inc_ref();
     return msg;
@@ -279,10 +278,10 @@ struct type_caster<sensor_msgs::PointField> {
     object MsgType = mod.attr("PointField");
     object msg = MsgType();
     // avoid !!python/unicode problem.
-    // msg.attr("name") = pybind11::cast(cpp_msg.name);
+    msg.attr("name") = pybind11::cast(cpp_msg.name);
     // msg.attr("name") = PyString_FromString(cpp_msg.name.c_str());
-    msg.attr("name") = pybind11::bytes(
-        reinterpret_cast<const char *>(&cpp_msg.name[0]), cpp_msg.name.size());
+    // msg.attr("name") = pybind11::bytes(
+    //     reinterpret_cast<const char *>(&cpp_msg.name[0]), cpp_msg.name.size());
     msg.attr("offset") = pybind11::cast(cpp_msg.offset);
     msg.attr("datatype") = pybind11::cast(cpp_msg.datatype);
     msg.attr("count") = pybind11::cast(cpp_msg.count);
@@ -503,7 +502,5 @@ struct type_caster<geometry_msgs::Pose> {
     return msg;
   }
 };
-}
-}
+}}
 
-#endif /* end of include guard: CONVERTERS_H_L7OWNAZ8 */
