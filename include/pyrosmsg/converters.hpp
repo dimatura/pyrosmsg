@@ -152,6 +152,43 @@ struct type_caster<std_msgs::Header>
 };
 
 template<>
+struct type_caster<std_msgs::ColorRGBA>
+{
+ public:
+ PYBIND11_TYPE_CASTER(std_msgs::ColorRGBA, _("std_msgs::ColorRGBA"));
+
+  // python -> cpp
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "std_msgs/ColorRGBA"))
+    {
+      return false;
+    }
+    value.r = src.attr("r").cast<float>();
+    value.g = src.attr("g").cast<float>();
+    value.b = src.attr("b").cast<float>();
+    value.a = src.attr("a").cast<float>();
+    return true;
+  }
+
+  // cpp -> python
+  static handle cast(std_msgs::ColorRGBA header,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("std_msgs.msg._ColorRGBA");
+    object MsgType = mod.attr("ColorRGBA");
+    object msg = MsgType();
+    msg.attr("r") = pybind11::cast(header.r);
+    msg.attr("g") = pybind11::cast(header.g);
+    msg.attr("b") = pybind11::cast(header.b);
+    msg.attr("a") = pybind11::cast(header.a);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+template<>
 struct type_caster<geometry_msgs::Point>
 {
  public:
@@ -913,7 +950,7 @@ template<>
 struct type_caster<shape_msgs::SolidPrimitive>
 {
  public:
- PYBIND11_TYPE_CASTER(shape_msgs::SolidPrimitive, _("shape_msgs::CollisionObject"));
+ PYBIND11_TYPE_CASTER(shape_msgs::SolidPrimitive, _("shape_msgs::SolidPrimitive"));
 
   bool load(handle src, bool)
   {
@@ -922,6 +959,7 @@ struct type_caster<shape_msgs::SolidPrimitive>
       return false;
     }
     value.dimensions = src.attr("dimensions").cast<std::vector<double>>();
+    value.type = src.attr("type").cast<int>();
     return true;
   }
 
@@ -933,6 +971,69 @@ struct type_caster<shape_msgs::SolidPrimitive>
     object MsgType = mod.attr("SolidPrimitive");
     object msg = MsgType();
     msg.attr("dimensions") = pybind11::cast(cpp_msg.dimensions);
+    msg.attr("type") = pybind11::cast(cpp_msg.type);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+
+template<>
+struct type_caster<shape_msgs::MeshTriangle>
+{
+ public:
+ PYBIND11_TYPE_CASTER(shape_msgs::MeshTriangle, _("shape_msgs::MeshTriangle"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "shape_msgs/MeshTriangle"))
+    {
+      return false;
+    }
+    value.vertex_indices = src.attr("vertex_indices").cast<boost::array<uint32_t, 3>>();
+    return true;
+  }
+
+  static handle cast(shape_msgs::MeshTriangle cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("shape_msgs.msg._MeshTriangle");
+    object MsgType = mod.attr("MeshTriangle");
+    object msg = MsgType();
+    msg.attr("vertex_indices") = pybind11::cast(cpp_msg.vertex_indices);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+
+template<>
+struct type_caster<shape_msgs::Mesh>
+{
+ public:
+ PYBIND11_TYPE_CASTER(shape_msgs::Mesh, _("shape_msgs::Mesh"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "shape_msgs/Mesh"))
+    {
+      return false;
+    }
+    value.triangles = src.attr("triangles").cast<std::vector<shape_msgs::MeshTriangle>>();
+    value.vertices = src.attr("vertices").cast<std::vector<geometry_msgs::Point>>();
+    return true;
+  }
+
+  static handle cast(shape_msgs::Mesh cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("shape_msgs.msg._Mesh");
+    object MsgType = mod.attr("Mesh");
+    object msg = MsgType();
+    msg.attr("triangles") = pybind11::cast(cpp_msg.triangles);
+    msg.attr("vertices") = pybind11::cast(cpp_msg.vertices);
     msg.inc_ref();
     return msg;
   }
@@ -955,6 +1056,8 @@ struct type_caster<moveit_msgs::CollisionObject>
     value.id = src.attr("id").cast<std::string>();
     value.primitives = src.attr("primitives").cast<std::vector<shape_msgs::SolidPrimitive>>();
     value.primitive_poses = src.attr("primitive_poses").cast<std::vector<geometry_msgs::Pose>>();
+    value.meshes = src.attr("meshes").cast<std::vector<shape_msgs::Mesh>>();
+    value.mesh_poses = src.attr("mesh_poses").cast<std::vector<geometry_msgs::Pose>>();
     value.operation = src.attr("operation").cast<int8_t>();
     return true;
   }
@@ -978,6 +1081,76 @@ struct type_caster<moveit_msgs::CollisionObject>
 
 
 template<>
+struct type_caster<octomap_msgs::Octomap>
+{
+ public:
+ PYBIND11_TYPE_CASTER(octomap_msgs::Octomap, _("octomap_msgs::Octomap"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "octomap_msgs/Octomap"))
+    {
+      return false;
+    }
+    value.header = src.attr("header").cast<std_msgs::Header>();
+    value.binary = src.attr("binary").cast<bool>();
+    value.id = src.attr("id").cast<std::string>();
+    value.resolution = src.attr("resolution").cast<double>();
+    value.data = src.attr("data").cast<std::vector<int8_t>>();
+    return true;
+  }
+
+  static handle cast(octomap_msgs::Octomap cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("octomap_msgs.msg._Octomap");
+    object MsgType = mod.attr("Octomap");
+    object msg = MsgType();
+    msg.attr("header") = pybind11::cast(cpp_msg.header);
+    msg.attr("binary") = pybind11::cast(cpp_msg.binary);
+    msg.attr("id") = pybind11::cast(cpp_msg.id);
+    msg.attr("resolution") = pybind11::cast(cpp_msg.resolution);
+    msg.attr("data") = pybind11::cast(cpp_msg.data);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+template<>
+struct type_caster<octomap_msgs::OctomapWithPose>
+{
+ public:
+ PYBIND11_TYPE_CASTER(octomap_msgs::OctomapWithPose, _("octomap_msgs::OctomapWithPose"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "octomap_msgs/OctomapWithPose"))
+    {
+      return false;
+    }
+    value.header = src.attr("header").cast<std_msgs::Header>();
+    value.origin = src.attr("origin").cast<geometry_msgs::Pose>();
+    value.octomap = src.attr("octomap").cast<octomap_msgs::Octomap>();
+    return true;
+  }
+
+  static handle cast(octomap_msgs::OctomapWithPose cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("octomap_msgs.msg._OctomapWithPose");
+    object MsgType = mod.attr("OctomapWithPose");
+    object msg = MsgType();
+    msg.attr("header") = pybind11::cast(cpp_msg.header);
+    msg.attr("origin") = pybind11::cast(cpp_msg.origin);
+    msg.attr("octomap") = pybind11::cast(cpp_msg.octomap);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+template<>
 struct type_caster<moveit_msgs::PlanningSceneWorld>
 {
  public:
@@ -990,6 +1163,7 @@ struct type_caster<moveit_msgs::PlanningSceneWorld>
       return false;
     }
     value.collision_objects = src.attr("collision_objects").cast<std::vector<moveit_msgs::CollisionObject>>();
+    value.octomap = src.attr("octomap").cast<octomap_msgs::OctomapWithPose>();
     return true;
   }
 
@@ -1001,6 +1175,166 @@ struct type_caster<moveit_msgs::PlanningSceneWorld>
     object MsgType = mod.attr("PlanningSceneWorld");
     object msg = MsgType();
     msg.attr("collision_objects") = pybind11::cast(cpp_msg.collision_objects);
+    msg.attr("octomap") = pybind11::cast(cpp_msg.octomap);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+template<>
+struct type_caster<moveit_msgs::LinkScale>
+{
+ public:
+ PYBIND11_TYPE_CASTER(moveit_msgs::LinkScale, _("moveit_msgs::LinkScale"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "moveit_msgs/LinkScale"))
+    {
+      return false;
+    }
+    value.link_name = src.attr("link_name").cast<std::string>();
+    value.scale = src.attr("scale").cast<double>();
+    return true;
+  }
+
+  static handle cast(moveit_msgs::LinkScale cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("moveit_msgs.msg._LinkScale");
+    object MsgType = mod.attr("LinkScale");
+    object msg = MsgType();
+    msg.attr("link_name") = pybind11::cast(cpp_msg.link_name);
+    msg.attr("scale") = pybind11::cast(cpp_msg.scale);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+
+template<>
+struct type_caster<moveit_msgs::ObjectColor>
+{
+ public:
+ PYBIND11_TYPE_CASTER(moveit_msgs::ObjectColor, _("moveit_msgs::ObjectColor"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "moveit_msgs/ObjectColor"))
+    {
+      return false;
+    }
+    value.id = src.attr("id").cast<std::string>();
+    value.color = src.attr("color").cast<std_msgs::ColorRGBA>();
+    return true;
+  }
+
+  static handle cast(moveit_msgs::ObjectColor cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("moveit_msgs.msg._ObjectColor");
+    object MsgType = mod.attr("ObjectColor");
+    object msg = MsgType();
+    msg.attr("id") = pybind11::cast(cpp_msg.id);
+    msg.attr("color") = pybind11::cast(cpp_msg.color);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+template<>
+struct type_caster<moveit_msgs::LinkPadding>
+{
+ public:
+ PYBIND11_TYPE_CASTER(moveit_msgs::LinkPadding, _("moveit_msgs::LinkPadding"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "moveit_msgs/LinkPadding"))
+    {
+      return false;
+    }
+    value.link_name = src.attr("link_name").cast<std::string>();
+    value.padding = src.attr("padding").cast<double>();
+    return true;
+  }
+
+  static handle cast(moveit_msgs::LinkPadding cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("moveit_msgs.msg._LinkPadding");
+    object MsgType = mod.attr("LinkPadding");
+    object msg = MsgType();
+    msg.attr("link_name") = pybind11::cast(cpp_msg.link_name);
+    msg.attr("padding") = pybind11::cast(cpp_msg.padding);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+
+template<>
+struct type_caster<moveit_msgs::AllowedCollisionEntry>
+{
+ public:
+ PYBIND11_TYPE_CASTER(moveit_msgs::AllowedCollisionEntry, _("moveit_msgs::AllowedCollisionEntry"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "moveit_msgs/AllowedCollisionEntry"))
+    {
+      return false;
+    }
+    value.enabled = src.attr("enabled").cast<std::vector<uint8_t>>();
+    return true;
+  }
+
+  static handle cast(moveit_msgs::AllowedCollisionEntry cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("moveit_msgs.msg._AllowedCollisionEntry");
+    object MsgType = mod.attr("AllowedCollisionEntry");
+    object msg = MsgType();
+    msg.attr("enabled") = pybind11::cast(cpp_msg.enabled);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+template<>
+struct type_caster<moveit_msgs::AllowedCollisionMatrix>
+{
+ public:
+ PYBIND11_TYPE_CASTER(moveit_msgs::AllowedCollisionMatrix, _("moveit_msgs::AllowedCollisionMatrix"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "moveit_msgs/AllowedCollisionMatrix"))
+    {
+      return false;
+    }
+    value.entry_names = src.attr("entry_names").cast<std::vector<std::string>>();
+    value.entry_values = src.attr("entry_values").cast<std::vector<moveit_msgs::AllowedCollisionEntry>>();
+    value.default_entry_names = src.attr("default_entry_names").cast<std::vector<std::string>>();
+    value.default_entry_values = src.attr("default_entry_values").cast<std::vector<uint8_t>>();
+    return true;
+  }
+
+  static handle cast(moveit_msgs::AllowedCollisionMatrix cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("moveit_msgs.msg._AllowedCollisionMatrix");
+    object MsgType = mod.attr("AllowedCollisionMatrix");
+    object msg = MsgType();
+    msg.attr("entry_names") = pybind11::cast(cpp_msg.entry_names);
+    msg.attr("entry_values") = pybind11::cast(cpp_msg.entry_values);
+    msg.attr("default_entry_names") = pybind11::cast(cpp_msg.default_entry_names);
+    msg.attr("default_entry_values") = pybind11::cast(cpp_msg.default_entry_values);
     msg.inc_ref();
     return msg;
   }
@@ -1022,6 +1356,12 @@ struct type_caster<moveit_msgs::PlanningScene>
     value.name = src.attr("name").cast<std::string>();
     value.robot_state = src.attr("robot_state").cast<moveit_msgs::RobotState>();
     value.robot_model_name = src.attr("robot_model_name").cast<std::string>();
+    value.fixed_frame_transforms = src.attr(
+        "fixed_frame_transforms").cast<std::vector<geometry_msgs::TransformStamped>>();
+    value.allowed_collision_matrix = src.attr("allowed_collision_matrix").cast<moveit_msgs::AllowedCollisionMatrix>();
+    value.link_padding = src.attr("link_padding").cast<std::vector<moveit_msgs::LinkPadding>>();
+    value.link_scale = src.attr("link_scale").cast<std::vector<moveit_msgs::LinkScale>>();
+    value.object_colors = src.attr("object_colors").cast<std::vector<moveit_msgs::ObjectColor>>();
     value.world = src.attr("world").cast<moveit_msgs::PlanningSceneWorld>();
     value.is_diff = src.attr("is_diff").cast<bool>();
     return true;
@@ -1037,6 +1377,11 @@ struct type_caster<moveit_msgs::PlanningScene>
     msg.attr("name") = pybind11::cast(cpp_msg.name);
     msg.attr("robot_state") = pybind11::cast(cpp_msg.robot_state);
     msg.attr("robot_model_name") = pybind11::cast(cpp_msg.robot_model_name);
+    msg.attr("fixed_frame_transforms") = pybind11::cast(cpp_msg.fixed_frame_transforms);
+    msg.attr("allowed_collision_matrix") = pybind11::cast(cpp_msg.allowed_collision_matrix);
+    msg.attr("link_padding") = pybind11::cast(cpp_msg.link_padding);
+    msg.attr("link_scale") = pybind11::cast(cpp_msg.link_scale);
+    msg.attr("object_colors") = pybind11::cast(cpp_msg.object_colors);
     msg.attr("world") = pybind11::cast(cpp_msg.world);
     msg.attr("is_diff") = pybind11::cast(cpp_msg.is_diff);
     msg.inc_ref();
