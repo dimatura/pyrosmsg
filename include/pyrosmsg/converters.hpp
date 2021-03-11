@@ -891,8 +891,7 @@ struct type_caster<moveit_msgs::RobotState>
     }
     value.joint_state = src.attr("joint_state").cast<sensor_msgs::JointState>();
 //    value.multi_dof_joint_state = src.attr("multi_dof_joint_state").cast<sensor_msgs::MultiDOFJointState>();
-//    value.attached_collision_objects = src.attr(
-//        "attached_collision_objects").cast<std::vector<moveit_msgs::AttachedCollisionObject>>();
+    value.attached_collision_objects = src.attr("attached_collision_objects").cast<std::vector<moveit_msgs::AttachedCollisionObject>>();
     value.is_diff = src.attr("is_diff").cast<bool>();
     return true;
   }
@@ -906,7 +905,7 @@ struct type_caster<moveit_msgs::RobotState>
     object msg = MsgType();
     msg.attr("joint_state") = pybind11::cast(cpp_msg.joint_state);
 //    msg.attr("multi_dof_joint_state") = pybind11::cast(cpp_msg.multi_dof_joint_state);
-//    msg.attr("attached_collision_objects") = pybind11::cast(cpp_msg.attached_collision_objects);
+    msg.attr("attached_collision_objects") = pybind11::cast(cpp_msg.attached_collision_objects);
     msg.attr("is_diff") = pybind11::cast(cpp_msg.is_diff);
     msg.inc_ref();
     return msg;
