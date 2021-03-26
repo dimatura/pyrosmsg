@@ -1,6 +1,7 @@
 # pyrosmsg
 
 Daniel Maturana 2018, dimatura@gmail.com
+Peter Mitrano 2020, pmitrano@umich.edu
 
 # What
 
@@ -88,12 +89,14 @@ def my_pc2_callback(pc2msg):
 - `sensor_msgs::PointField`
 - `sensor_msgs::PointCloud2`
 - `sensor_msgs::Image`
+- `moveit_msgs::PlanningScene` and all dependant types
+- probably more I haven't listed here
 
 
 # Platforms
 
-Only tested with Ubuntu 16.04, ROS Kinetic, and Python 2.7. Would probably work with other Linux and (Indigo and newer) ROS distros.
-Python 3, probably not without minor modifications.
+Originally tested with Ubuntu 16.04, ROS Kinetic, and Python 2.7. Would probably work with other Linux and (Indigo and newer) ROS distros.
+Peter has recently tested on 20.04 with Noetic and Python 3.
 
 # TODO
 
