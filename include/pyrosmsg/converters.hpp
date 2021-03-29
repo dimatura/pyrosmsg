@@ -380,8 +380,7 @@ struct type_caster<geometry_msgs::TransformStamped>
     object MsgType = mod.attr("TransformStamped");
     object msg = MsgType();
     msg.attr("header") = pybind11::cast(cpp_msg.header);
-    msg.attr("child_frame_id") = pybind11::bytes(reinterpret_cast<const char *>(&cpp_msg.child_frame_id[0]),
-                                                 cpp_msg.child_frame_id.size());
+    msg.attr("child_frame_id") = pybind11::cast(cpp_msg.child_frame_id);
     msg.attr("transform") = pybind11::cast(cpp_msg.transform);
     msg.inc_ref();
     return msg;
@@ -417,8 +416,7 @@ struct type_caster<sensor_msgs::PointField>
     // avoid !!python/unicode problem.
     // msg.attr("name") = pybind11::cast(cpp_msg.name);
     // msg.attr("name") = PyString_FromString(cpp_msg.name.c_str());
-    msg.attr("name") = pybind11::bytes(
-        reinterpret_cast<const char *>(&cpp_msg.name[0]), cpp_msg.name.size());
+    msg.attr("name") = pybind11::cast(cpp_msg.name);
     msg.attr("offset") = pybind11::cast(cpp_msg.offset);
     msg.attr("datatype") = pybind11::cast(cpp_msg.datatype);
     msg.attr("count") = pybind11::cast(cpp_msg.count);
