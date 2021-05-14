@@ -15,7 +15,6 @@
 #include <ros/time.h>
 
 #include <geometry_msgs/Point.h>
-#include <geometry_msgs/Point.h>
 #include <moveit_msgs/RobotTrajectory.h>
 #include <moveit_msgs/PlanningScene.h>
 #include <moveit_msgs/RobotState.h>
