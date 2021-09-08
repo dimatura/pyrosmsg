@@ -15,6 +15,7 @@
 #include <ros/time.h>
 
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/Wrench.h>
 #include <moveit_msgs/RobotTrajectory.h>
 #include <moveit_msgs/PlanningScene.h>
 #include <moveit_msgs/RobotState.h>
@@ -219,7 +220,6 @@ struct type_caster<geometry_msgs::Point>
     return msg;
   }
 };
-
 template<>
 struct type_caster<geometry_msgs::Vector3>
 {
@@ -252,6 +252,38 @@ struct type_caster<geometry_msgs::Vector3>
     return msg;
   }
 };
+
+template<>
+struct type_caster<geometry_msgs::Wrench>
+{
+ public:
+ PYBIND11_TYPE_CASTER(geometry_msgs::Wrench, _("geometry_msgs::Wrench"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "geometry_msgs/Wrench"))
+    {
+      return false;
+    }
+    value.force = src.attr("force").cast<geometry_msgs::Vector3>();
+    value.torque = src.attr("torque").cast<geometry_msgs::Vector3>();
+    return true;
+  }
+
+  static handle cast(geometry_msgs::Wrench pt,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("geometry_msgs.msg._Wrench");
+    object MsgType = mod.attr("Wrench");
+    object msg = MsgType();
+    msg.attr("force") = pybind11::cast(pt.force);
+    msg.attr("torque") = pybind11::cast(pt.torque);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
 
 template<>
 struct type_caster<geometry_msgs::Quaternion>
