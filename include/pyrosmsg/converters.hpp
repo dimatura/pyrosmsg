@@ -661,6 +661,37 @@ struct type_caster<sensor_msgs::CameraInfo>
 };
 
 template<>
+struct type_caster<geometry_msgs::PoseStamped>
+{
+ public:
+ PYBIND11_TYPE_CASTER(geometry_msgs::PoseStamped, _("geometry_msgs::PoseStamped"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "geometry_msgs/PoseStamped"))
+    {
+      return false;
+    }
+    value.header = src.attr("header").cast<std_msgs::Header>();
+    value.pose = src.attr("pose").cast<geometry_msgs::Pose>();
+    return true;
+  }
+
+  static handle cast(geometry_msgs::PoseStamped cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("geometry_msgs.msg._PoseStamped");
+    object MsgType = mod.attr("PoseStamped");
+    object msg = MsgType();
+    msg.attr("header") = pybind11::cast(cpp_msg.header);
+    msg.attr("pose") = pybind11::cast(cpp_msg.pose);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+template<>
 struct type_caster<geometry_msgs::Pose>
 {
  public:
