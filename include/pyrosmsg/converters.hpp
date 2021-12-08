@@ -1038,6 +1038,39 @@ struct type_caster<shape_msgs::SolidPrimitive>
 
 
 template<>
+struct type_caster<shape_msgs::Plane>
+{
+ public:
+ PYBIND11_TYPE_CASTER(shape_msgs::Plane, _("shape_msgs::Plane"));
+
+  bool load(handle src, bool)
+  {
+    if (!is_ros_msg_type(src, "shape_msgs/Plane"))
+    {
+      return false;
+    }
+    value.coef[0] = src.attr("coef").attr("__getitem__")(0).cast<double>();
+    value.coef[1] = src.attr("coef").attr("__getitem__")(1).cast<double>();
+    value.coef[2] = src.attr("coef").attr("__getitem__")(2).cast<double>();
+    value.coef[3] = src.attr("coef").attr("__getitem__")(3).cast<double>();
+    return true;
+  }
+
+  static handle cast(shape_msgs::Plane cpp_msg,
+                     return_value_policy policy,
+                     handle parent)
+  {
+    object mod = module::import("shape_msgs.msg._Plane");
+    object MsgType = mod.attr("Plane");
+    object msg = MsgType();
+    msg.attr("coef") = pybind11::cast(cpp_msg.coef);
+    msg.inc_ref();
+    return msg;
+  }
+};
+
+
+template<>
 struct type_caster<shape_msgs::MeshTriangle>
 {
  public:
@@ -1117,6 +1150,8 @@ struct type_caster<moveit_msgs::CollisionObject>
     value.primitive_poses = src.attr("primitive_poses").cast<std::vector<geometry_msgs::Pose>>();
     value.meshes = src.attr("meshes").cast<std::vector<shape_msgs::Mesh>>();
     value.mesh_poses = src.attr("mesh_poses").cast<std::vector<geometry_msgs::Pose>>();
+    value.planes = src.attr("planes").cast<std::vector<shape_msgs::Plane>>();
+    value.plane_poses = src.attr("plane_poses").cast<std::vector<geometry_msgs::Pose>>();
     value.operation = src.attr("operation").cast<int8_t>();
     return true;
   }
@@ -1132,6 +1167,10 @@ struct type_caster<moveit_msgs::CollisionObject>
     msg.attr("id") = pybind11::cast(cpp_msg.id);
     msg.attr("primitives") = pybind11::cast(cpp_msg.primitives);
     msg.attr("primitive_poses") = pybind11::cast(cpp_msg.primitive_poses);
+    msg.attr("meshes") = pybind11::cast(cpp_msg.meshes);
+    msg.attr("mesh_poses") = pybind11::cast(cpp_msg.mesh_poses);
+    msg.attr("planes") = pybind11::cast(cpp_msg.planes);
+    msg.attr("plane_poses") = pybind11::cast(cpp_msg.plane_poses);
     msg.attr("operation") = pybind11::cast(cpp_msg.operation);
     msg.inc_ref();
     return msg;
